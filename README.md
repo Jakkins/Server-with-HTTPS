@@ -1,37 +1,12 @@
 ## ServerHTTPS
 **TO DO**
-
-0. <a href="https://github.com/Jakkins/ServerHTTPS#legenda"> Legenda </a>
-1. <a href="https://github.com/Jakkins/ServerHTTPS#generate-keys"> Generate Keys </a>
+0. <a href="https://github.com/Jakkins/ServerHTTPS#generate-keys"> Generate Keys </a>
     - CA's Keys
     - Server Keys
-2. Use express to make an app with NodeJS
+1. Use express to make an app with NodeJS
     - Handshake for HTTP over TLS 1.3 (Diffie-Hellman)
-3. Try the HTTPS connection
----
-#### What is the difference between .pem, .csr, .key and .crt? (26 Oct 2018)
-> .pem stands for Privacy Enhanced Mail; it simply indicates a base64 encoding with header and footer lines.
-> <a href="https://github.com/Jakkins/ServerHTTPS#sources"> Source </a>{1}
-
-Ex.
-```
------BEGIN [label]-----
-blablabla
------END [label]-----
-```
-The "[label]" section describes the message, so it might be: 
-- PRIVATE KEY
-- CERTIFICATE REQUEST
-- CERTIFICATE
-Ex.
-```
------BEGIN PRIVATE KEY-----
-blablalba
------END PRIVATE KEY-----
-```
-
-One PEM file can contain multiple certificates
-
+2. Try the HTTPS connection
+3. <a href="https://github.com/Jakkins/ServerHTTPS#legenda"> Legenda </a>
 ---
 ### Generate Keys
 #### Generate CA's Keys
@@ -162,6 +137,32 @@ openssl rsa -in privkey.pem -passin pass:foobar -pubout -out privkey.pub
 
 
 ---
+#### What is the difference between .pem, .csr, .key and .crt? (26 Oct 2018)
+> .pem stands for Privacy Enhanced Mail; it simply indicates a base64 encoding with header and footer lines.
+> <a href="https://github.com/Jakkins/ServerHTTPS#sources"> Source </a>{1}
+
+Ex.
+```
+-----BEGIN [label]-----
+blablabla
+-----END [label]-----
+```
+The "[label]" section describes the message, so it might be: 
+- PRIVATE KEY
+- CERTIFICATE REQUEST
+- CERTIFICATE
+
+Ex.
+```
+-----BEGIN PRIVATE KEY-----
+blablabla
+-----END PRIVATE KEY-----
+```
+
+One PEM file can contain multiple certificates
+
+---
+
 
 
 ---
