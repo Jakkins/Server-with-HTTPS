@@ -1,5 +1,6 @@
 ## ServerHTTPS
 **TO DO**
+
 0. <a href="https://github.com/Jakkins/ServerHTTPS#generate-keys"> Generate Keys </a>
     - CA's Keys
     - Server Keys
@@ -9,6 +10,8 @@
 3. <a href="https://github.com/Jakkins/ServerHTTPS#legenda"> Legenda </a>
 ---
 ### Generate Keys
+#### TLS 1.3 (<a href="https://www.rfc-editor.org/info/rfc8446"> RFC 8446 </a>)
+
 #### Generate CA's Keys
 ```shell
 openssl req -x509 -newkey rsa:4096 -days 365 -keyout ca-key.pem -out ca-cert.pem
@@ -99,7 +102,6 @@ openssl verify -CAfile ca-cert.pem server-cert.pem
 - AES
 - RSA Handshake
 - DH 1.2 Handshake
-#### TLS 1.3 (RFC 8446)
 ##### DH 1.3 handshake
 
 The problem here is not so much with CBC, but with alternatives that are easier to implement safely, without losing mathematical security.In fact, AES-CBC turned out to be notoriously difficult to implement correctly. I recall that older implementations of transport layer security don't have cryptographically secure initialization vectors, which are a must-have for CBC mode
