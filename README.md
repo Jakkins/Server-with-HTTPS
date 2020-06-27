@@ -10,19 +10,19 @@
 3. Try the HTTPS connection
 ---
 #### What is the difference between .pem, .csr, .key and .crt? (26 Oct 2018)
-.pem stands for Privacy Enhanced Mail; it simply indicates a base64 encoding with header and footer lines.
-> <a href="https://github.com/Jakkins/ServerHTTPS#sources"> Source </a>{1}
+> .pem stands for Privacy Enhanced Mail; it simply indicates a base64 encoding with header and footer lines.
+> <a href="https://github.com/Jakkins/ServerHTTPS#sources"> Source </a>{1} 
 Ex.
 ```
-    -----BEGIN [label]-----
-    blablabla
-    -----END [label]-----
+-----BEGIN [label]-----
+blablabla
+-----END [label]-----
 ```
 The "[label]" section describes the message, so it might be PRIVATE KEY, CERTIFICATE REQUEST, or CERTIFICATE.
 ```
-    -----BEGIN PRIVATE KEY-----
-    blablalba
-    -----END PRIVATE KEY-----
+-----BEGIN PRIVATE KEY-----
+blablalba
+-----END PRIVATE KEY-----
 ```    
 One PEM file can contain multiple certificates
 ---
