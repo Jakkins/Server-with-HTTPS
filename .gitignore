@@ -1,0 +1,17 @@
+# Cosa non voglio committare?
+#
+#   Private files
+#   node_modules
+#   .vscode settings
+#   ENV files
+#
+
+/node_modules
+/.vscode
+*.ENV
+
+
+
+
+
+
