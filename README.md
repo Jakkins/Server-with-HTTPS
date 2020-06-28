@@ -239,12 +239,14 @@ One PEM file can contain multiple certificates
 
 ### Sources 
 > [ sources tagged with {*} are recommended ]
+
 > [ sources tagged with {!} are for visual learner ]
+
 > [ sources tagged with {M} are for Math theory ]
 ###### Cipher suite:
 - https://en.wikipedia.org/wiki/Cipher_suite
-- <a href="https://www.youtube.com/watch?v=ZM3tXhPV8v0"> What is a TLS Cipher Suite? - YouTube (2019) </a>
-
+- [What is a TLS Cipher Suite? - YouTube (2019)](https://www.youtube.com/watch?v=ZM3tXhPV8v0)
+---
 - {1} <a href="https://crypto.stackexchange.com/questions/43697/what-is-the-difference-between-pem-csr-key-and-crt" target="_blank"> Common format </a>
 - <a href="https://www.youtube.com/watch?v=8ptiZlO7ROs" target="_blank"> Easy start https server - YouTube (2016) </a>
 - <a href="https://www.youtube.com/watch?v=7YgaZIFn7mY" target="_blank"> Create & sign SSL/TLS certificates with openssl - YouTube (2020) </a>
