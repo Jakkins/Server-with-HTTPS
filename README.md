@@ -1,16 +1,80 @@
-## ServerHTTPS
+<p align="center"> <h1>ServerHTTPS</h1> </p>
+
 **TO DO**
 
-0. <a href="https://github.com/Jakkins/ServerHTTPS#generate-keys"> Generate Keys </a>
+0. 
+1. <a href="https://github.com/Jakkins/ServerHTTPS#generate-keys"> Generate Keys </a>
+    - OpenSSL TLS 1.3 supported ciphersuites
+    - X25519
+2. 
     - CA's Keys
     - Server Keys
-1. Use express to make an app with NodeJS
+3. Use express to make an app with NodeJS
     - Handshake for HTTP over TLS 1.3 (Diffie-Hellman)
-2. Try the HTTPS connection
-3. <a href="https://github.com/Jakkins/ServerHTTPS#legenda"> Legenda </a>
+4. Try the HTTPS connection
+5. <a href="https://github.com/Jakkins/ServerHTTPS#legenda"> Legenda </a>
 ---
-### Generate Keys
-#### TLS 1.3 (<a href="https://www.rfc-editor.org/info/rfc8446"> RFC 8446 </a>)
+## Generate Keys
+### TLS 1.3 (<a href="https://www.rfc-editor.org/info/rfc8446"> RFC 8446 </a>)
+Differences with TLS1.2 and below
+- Authenticated Encryption with Associated Data (AEAD) algorithms
+- Static RSA and Diffie-Hellman cipher suites have been removed
+
+TLS supports three basic key exchange modes:
+- (EC)DHE (Diffie-Hellman over either finite fields or elliptic curves)
+- PSK-only
+- PSK with (EC)DHE
+
+Basic full TLS handshake: (<a href="https://www.rfc-editor.org/rfc/rfc8446.html#section-2"> See More </a>)
+```
+       Client                                           Server
+
+Key  ^ ClientHello
+Exch | + key_share*
+     | + signature_algorithms*
+     | + psk_key_exchange_modes*
+     v + pre_shared_key*       -------->
+                                                  ServerHello  ^ Key
+                                                 + key_share*  | Exch
+                                            + pre_shared_key*  v
+                                        {EncryptedExtensions}  ^  Server
+                                        {CertificateRequest*}  v  Params
+                                               {Certificate*}  ^
+                                         {CertificateVerify*}  | Auth
+                                                   {Finished}  v
+                               <--------  [Application Data*]
+     ^ {Certificate*}
+Auth | {CertificateVerify*}
+     v {Finished}              -------->
+       [Application Data]      <------->  [Application Data]
+```
+    +  Indicates noteworthy extensions sent in the previously noted message.
+    *  Indicates optional or situation-dependent messages/extensions that are not always sent.
+    {} Indicates messages protected using keys derived from a [sender]_handshake_traffic_secret.
+    [] Indicates messages protected using keys derived from [sender]_application_traffic_secret_N.
+---
+
+
+#### OpenSSL TLS 1.3 supported ciphersuites (<a href="https://wiki.openssl.org/index.php/TLS1.3"> Source </a>)
+> If two peers supporting different TLSv1.3 draft versions attempt to communicate then they will fall back to TLSv1.2
+OpenSSL has implemented support for five TLSv1.3 ciphersuites as follows:
+- TLS_AES_256_GCM_SHA384
+- TLS_CHACHA20_POLY1305_SHA256
+- TLS_AES_128_GCM_SHA256
+- TLS_AES_128_CCM_8_SHA256
+- TLS_AES_128_CCM_SHA256
+
+OpenSSL only supports ECDHE groups for this
+
+The list of supported groups is configurable
+
+In practice most clients will use X25519 or P-256 for their initial key_share. For maximum performance it is recommended that servers are configured to support at least those two groups and clients use one of those two for its initial key_share. This is the default case (OpenSSL clients will use X25519).
+
+#### <a href="https://en.wikipedia.org/wiki/Curve25519"> X25519 </a>)
+https://wiki.openssl.org/index.php/Command_Line_Elliptic_Curve_Operations
+If you need to generate x25519 or ed25519 keys then see the genpkey subcommand.
+https://wiki.openssl.org/index.php/Command_Line_Utilities#Key_Generation
+
 
 #### Generate CA's Keys
 ```shell
