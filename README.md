@@ -2,9 +2,8 @@
 
 **TO DO**
 
-0. 
+0. <a href="https://github.com/Jakkins/ServerHTTPS#requirements"> Requirements (what I'll use)</a>
 1. <a href="https://github.com/Jakkins/ServerHTTPS#generate-keys"> Generate Keys </a>
-    - OpenSSL TLS 1.3 supported ciphersuites
     - X25519
 2. 
     - CA's Keys
@@ -13,12 +12,18 @@
     - Handshake for HTTP over TLS 1.3 (Diffie-Hellman)
 4. Try the HTTPS connection
 5. <a href="https://github.com/Jakkins/ServerHTTPS#legenda"> Legenda </a>
----
-## Generate Keys
+<h2 align="center">Requirements</h2>
+ 
+- OpenSSl 1.1.1 (implements support for five TLSv1.3 ciphersuites[1])
+    - TLS_AES_256_GCM_SHA384
+    - TLS_CHACHA20_POLY1305_SHA256
+    - TLS_AES_128_GCM_SHA256
+    - TLS_AES_128_CCM_8_SHA256
+    - TLS_AES_128_CCM_SHA256
+
+<h2 align="center">Generate Keys</h2>
+
 ### TLS 1.3 (<a href="https://www.rfc-editor.org/info/rfc8446"> RFC 8446 </a>)
-Differences with TLS1.2 and below
-- Authenticated Encryption with Associated Data (AEAD) algorithms
-- Static RSA and Diffie-Hellman cipher suites have been removed
 
 TLS supports three basic key exchange modes:
 - (EC)DHE (Diffie-Hellman over either finite fields or elliptic curves)
@@ -57,12 +62,7 @@ Auth | {CertificateVerify*}
 
 #### OpenSSL TLS 1.3 supported ciphersuites (<a href="https://wiki.openssl.org/index.php/TLS1.3"> Source </a>)
 > If two peers supporting different TLSv1.3 draft versions attempt to communicate then they will fall back to TLSv1.2
-OpenSSL has implemented support for five TLSv1.3 ciphersuites as follows:
-- TLS_AES_256_GCM_SHA384
-- TLS_CHACHA20_POLY1305_SHA256
-- TLS_AES_128_GCM_SHA256
-- TLS_AES_128_CCM_8_SHA256
-- TLS_AES_128_CCM_SHA256
+
 
 OpenSSL only supports ECDHE groups for this
 
@@ -70,13 +70,17 @@ The list of supported groups is configurable
 
 In practice most clients will use X25519 or P-256 for their initial key_share. For maximum performance it is recommended that servers are configured to support at least those two groups and clients use one of those two for its initial key_share. This is the default case (OpenSSL clients will use X25519).
 
-#### <a href="https://en.wikipedia.org/wiki/Curve25519"> X25519 </a>)
+#### <a href="https://en.wikipedia.org/wiki/Curve25519"> X25519 </a>
 https://wiki.openssl.org/index.php/Command_Line_Elliptic_Curve_Operations
+
 If you need to generate x25519 or ed25519 keys then see the genpkey subcommand.
+
 https://wiki.openssl.org/index.php/Command_Line_Utilities#Key_Generation
 
+https://wiki.openssl.org/index.php/Command_Line_Utilities#Commands
 
-#### Generate CA's Keys
+
+<h2 align="center">Generate CA's Keys</h2>
 ```shell
 openssl req -x509 -newkey rsa:4096 -days 365 -keyout ca-key.pem -out ca-cert.pem
 ```
@@ -237,6 +241,9 @@ One PEM file can contain multiple certificates
 ##### [ sources tagged with {*} are recommended ]
 ##### [ sources tagged with {!} are for visual learner ]
 ##### [ sources tagged with {M} are for Math theory ]
+[1]:Cipher suite:
+    - https://en.wikipedia.org/wiki/Cipher_suite
+    - https://www.youtube.com/watch?v=ZM3tXhPV8v0
 - {1} <a href="https://crypto.stackexchange.com/questions/43697/what-is-the-difference-between-pem-csr-key-and-crt" target="_blank"> Common format </a>
 - <a href="https://www.youtube.com/watch?v=8ptiZlO7ROs" target="_blank"> Easy start https server - YouTube (2016) </a>
 - <a href="https://www.youtube.com/watch?v=7YgaZIFn7mY" target="_blank"> Create & sign SSL/TLS certificates with openssl - YouTube (2020) </a>
