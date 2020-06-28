@@ -14,7 +14,7 @@
 5. <a href="https://github.com/Jakkins/ServerHTTPS#legenda"> Legenda </a>
 <h2 align="center">Requirements</h2>
  
-- OpenSSl 1.1.1 (implements support for five TLSv1.3 [ciphersuites](#ciphersuites))
+- OpenSSl 1.1.1 (implements support for five TLSv1.3 [cipher suites](#cipher-suites))
     - TLS_AES_256_GCM_SHA384
     - TLS_CHACHA20_POLY1305_SHA256
     - TLS_AES_128_GCM_SHA256
@@ -242,8 +242,8 @@ One PEM file can contain multiple certificates
 > [ sources tagged with {!} are for visual learner ]
 > [ sources tagged with {M} are for Math theory ]
 ###### Cipher suite:
-    - https://en.wikipedia.org/wiki/Cipher_suite
-    - https://www.youtube.com/watch?v=ZM3tXhPV8v0
+- https://en.wikipedia.org/wiki/Cipher_suite
+- https://www.youtube.com/watch?v=ZM3tXhPV8v0
 - {1} <a href="https://crypto.stackexchange.com/questions/43697/what-is-the-difference-between-pem-csr-key-and-crt" target="_blank"> Common format </a>
 - <a href="https://www.youtube.com/watch?v=8ptiZlO7ROs" target="_blank"> Easy start https server - YouTube (2016) </a>
 - <a href="https://www.youtube.com/watch?v=7YgaZIFn7mY" target="_blank"> Create & sign SSL/TLS certificates with openssl - YouTube (2020) </a>
