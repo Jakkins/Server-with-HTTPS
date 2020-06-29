@@ -1,11 +1,10 @@
 <h1 align="center">ServerHTTPS</h1>
 
 0. <a href="https://github.com/Jakkins/ServerHTTPS#what-ill-use"> What I'll use </a>
-1. <a href="https://github.com/Jakkins/ServerHTTPS#generate-keys"> Generate Keys </a>
-    - X25519
+1. <a href="https://github.com/Jakkins/ServerHTTPS#generate-keys"> Handshake </a>
+
 2. 
-    - CA's Keys
-    - Server Keys
+
 3. Use express to make an app with NodeJS
     - Handshake for HTTP over TLS 1.3 (Diffie-Hellman)
 4. Try the HTTPS connection
@@ -14,6 +13,7 @@
 <h2 align="center">What I'll use</h2>
 
 - OpenSSl 1.1.1 (implements support for five TLSv1.3 [cipher suites](#cipher-suite))
+- TLS 1.3 ([RFC 8446](https://www.rfc-editor.org/info/rfc8446))
 ```
 Implied for TLS 1.3:
 	- Key Exchange / key agreement algorithm: DHE or ECHDE (e.g. not RSA)
@@ -28,15 +28,9 @@ Implied for TLS 1.3:
 | Cipher | AES_128_GCM |
 | Mac | SHA256 |
 
-<h2 align="center">Generate Keys</h2>
+<h2 align="center">Handshake</h2>
 
-### TLS 1.3 (<a href="https://www.rfc-editor.org/info/rfc8446"> RFC 8446 </a>)
-TLS supports three basic key exchange modes:
-- (EC)DHE (Diffie-Hellman over either finite fields or elliptic curves)
-- PSK-only
-- PSK with (EC)DHE
-
-Basic full TLS handshake: (<a href="https://www.rfc-editor.org/rfc/rfc8446.html#section-2"> See More </a>)
+Basic full TLS handshake: ([Source](https://www.rfc-editor.org/rfc/rfc8446.html#section-2))
 ```
        Client                                           Server
 
@@ -63,6 +57,13 @@ Auth | {CertificateVerify*}
     *  Indicates optional or situation-dependent messages/extensions that are not always sent.
     {} Indicates messages protected using keys derived from a [sender]_handshake_traffic_secret.
     [] Indicates messages protected using keys derived from [sender]_application_traffic_secret_N.
+
+---
+
+
+
+
+
 ---
 
 
