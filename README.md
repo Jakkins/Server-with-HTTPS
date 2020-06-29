@@ -16,11 +16,9 @@
 <h2 align="center">Requirements</h2>
 
 - OpenSSl 1.1.1 (implements support for five TLSv1.3 [cipher suites](#cipher-suite))
-    - TLS_AES_256_GCM_SHA384
-    - TLS_CHACHA20_POLY1305_SHA256
-    - TLS_AES_128_GCM_SHA256
-    - TLS_AES_128_CCM_8_SHA256
-    - TLS_AES_128_CCM_SHA256
+- TLS 1.3
+    - Key Exchange: ECDHE (ex. not RSA)
+    - Cipher: AEAD ciphers (ex. not CBC)
 
 <h2 align="center">Generate Keys</h2>
 
@@ -245,26 +243,52 @@ One PEM file can contain multiple certificates
 > [ sources tagged with {M} are for Math theory ]
 ###### Cipher suite:
 - https://en.wikipedia.org/wiki/Cipher_suite
-- [What is a TLS Cipher Suite? - YouTube (2019)](https://www.youtube.com/watch?v=ZM3tXhPV8v0)
+- {*}[What is a TLS Cipher Suite? - YouTube (2019)](https://www.youtube.com/watch?v=ZM3tXhPV8v0)
 ---
-- {1} <a href="https://crypto.stackexchange.com/questions/43697/what-is-the-difference-between-pem-csr-key-and-crt" target="_blank"> Common format </a>
-- <a href="https://www.youtube.com/watch?v=8ptiZlO7ROs" target="_blank"> Easy start https server - YouTube (2016) </a>
-- <a href="https://www.youtube.com/watch?v=7YgaZIFn7mY" target="_blank"> Create & sign SSL/TLS certificates with openssl - YouTube (2020) </a>
-- <a href="https://www.youtube.com/watch?v=-f4Gbk-U758" target="_blank"> A complete overview of SSL/TLS and its cryptographic system - YouTube (2020) </a>
-- <a href="https://www.libressl.org/" target="_blank"> LibreSSL </a>
-- <a href="https://man.openbsd.org/openssl.1" target="_blank"> OpenSSL manual page </a>
-- <a href="https://man.openbsd.org/openssl.1#req" target="_blank"> OpenSSL manual page ( REQ )</a>
-- <a href="https://en.wikipedia.org/wiki/X.509" target="_blank"> X.509 </a>
-- <a href="https://en.wikipedia.org/wiki/Subject_Alternative_Name" target="_blank"> Subject Alternative Name (SAN) </a>
-- {!} <a href="https://www.youtube.com/watch?v=AlE5X1NlHgg" target="_blank"> Transport Layer Security, TLS 1.2 and 1.3 (Explained by Example) </a>
-- {!} <a href="https://www.youtube.com/watch?v=ntytZy3i-Jo" target="_blank"> Transport Layer Security 1.3 Explained - TLS Handshake, Key Exchange, TLS Extensions and MITM </a>
-- {!*} <a href="https://www.youtube.com/watch?v=NmM9HA2MQGI" target="_blank"> Secret Key Exchange (Diffie-Hellman) - Computerphile </a>
-- {M} <a href="https://www.youtube.com/watch?v=Yjrfm_oRO0w" target="_blank"> Diffie Hellman -the Mathematics bit- Computerphile </a>
-
+- {1} [Difference between pem, csr, key and crt](https://crypto.stackexchange.com/questions/43697/what-is-the-difference-between-pem-csr-key-and-crt)
+- [Easy start https server - YouTube (2016)](https://www.youtube.com/watch?v=8ptiZlO7ROs)
+- [Create & sign SSL/TLS certificates with openssl - YouTube (2020)](https://www.youtube.com/watch?v=7YgaZIFn7mY)
+- [A complete overview of SSL/TLS and its cryptographic system - YouTube (2020)](https://www.youtube.com/watch?v=-f4Gbk-U758)
+- [LibreSSL](https://www.libressl.org/)
+- [OpenSSL manual page](https://man.openbsd.org/openssl.1)
+- [OpenSSL manual page (REQ)](https://man.openbsd.org/openssl.1#req)
+- [X.509](https://en.wikipedia.org/wiki/X.509)
+- [Subject Alternative Name (SAN)](https://en.wikipedia.org/wiki/Subject_Alternative_Name)
+- {!}[Transport Layer Security, TLS 1.2 and 1.3 (Explained by Example)](https://www.youtube.com/watch?v=AlE5X1NlHgg)
+- {!}[Transport Layer Security 1.3 Explained - TLS Handshake, Key Exchange, TLS Extensions and MITM](https://www.youtube.com/watch?v=ntytZy3i-Jo)
+- {!*}[Secret Key Exchange (Diffie-Hellman) - Computerphile](https://www.youtube.com/watch?v=NmM9HA2MQGI)
+- {M}[Diffie Hellman -the Mathematics bit- Computerphile](https://www.youtube.com/watch?v=Yjrfm_oRO0w)
 
 ---
 
 #### Legenda:
+- Cipher Suite
+    - Protocol: {*}TLS 1.3, TLS 1.2, TLS 1.1, TLS 1.0, SSLv3, SSLv2
+    - Key Exchange: DH / DHE / {*}ECDHE / ADH, RSA
+    - Auth (certificate): {*}RSA, ECDSA
+    - Cipher (symmetric encryption algorithms): AES, {*}AES_GCM (AEAD cipher), AES_CBC, Camellia, DES, RC4, RC2
+    - Mac (message authentication code): SHA, SHA1, {*}SHA256, SHA384, MD5, MD2
+    Ex. 
+        TLS 1.2 
+        HexadecimalRappresentation : Protocol_KeyExchange_Auth_Cipher_Mac
+            - 0xc02b : TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+            - 0xc02f : TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+            - 0x009e : TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
+            - 0xcc14 : TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+            - 0xcc13 : TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+            - 0xc00a : TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+            - 0xc014 : TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+            - 0x0039 : TLS_DHE_RSA_WITH_AES_256_CBC_SHA
+            - 0xc009 : TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+            - 0xc013 : TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+            - 0x0033 : TLS_DHE_RSA_WITH_AES_128_CBC_SHA
+            - 0x009c : TLS_RSA_WITH_AES_128_GCM_SHA256
+            - 0x0035 : TLS_RSA_WITH_AES_256_CBC_SHA
+            - 0x002f : TLS_RSA_WITH_AES_128_CBC_SHA
+            - 0x000a : TLS_RSA_WITH_3DES_EDE_CBC_SHA
+            
+> When authentication or key exchange are not indicated <b>tipically</b> you can imply that is RSA
+
 - In Public Key Infrastructure (PKI) systems
     a Certificate Signing Request (also CSR or certification request) is a message sent from an applicant to a Certificate Authority (CA) in order to apply for a digital identity certificate. The most common format for CSRs is the PKCS#10 specification. Another is the Signed Public Key and Challenge SPKAC format generated by some web browsers.
 - PKCS stands for "Public Key Cryptography Standards"
