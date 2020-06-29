@@ -20,9 +20,7 @@ Implied for TLS 1.3:
 	- Authentication mechanism: RSA or DSA or ECDSA
 	- Ciphers: AEAD ciphers (e.g. not CBC)
 ```
-Example of cipher suite: TLS_AES_128_GCM_SHA256
-
-| | |
+| Example of cipher suite | TLS_AES_128_GCM_SHA256 |
 | :------- | :------ |
 | Protocol | TLS 1.3 |
 | Key Exchange | ECHDE, DHE, chosen from client's supported ciphersuites list |
