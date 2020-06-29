@@ -271,6 +271,7 @@ One PEM file can contain multiple certificates
 
     Ex. TLS 1.2 
         | HexadecimalRappresentation | Protocol_KeyExchange_Auth_Cipher_Mac |
+        | --- | --- |
         | 0xc02b | TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 |
         | 0xc02f | TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 |
         | 0x009e | TLS_DHE_RSA_WITH_AES_128_GCM_SHA256 |
