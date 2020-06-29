@@ -269,9 +269,10 @@ One PEM file can contain multiple certificates
     - Cipher (symmetric encryption algorithms): AES, {*}AES_GCM (AEAD cipher), AES_CBC, Camellia, DES, RC4, RC2
     - Mac (message authentication code): SHA, SHA1, {*}SHA256, SHA384, MD5, MD2
 
-    Ex. TLS 1.2 
+    Ex. TLS 1.2
+    
         | HexadecimalRappresentation | Protocol_KeyExchange_Auth_Cipher_Mac |
-        | --- | --- |
+        | -------------------------- | ------------------------------------ |
         | 0xc02b | TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 |
         | 0xc02f | TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 |
         | 0x009e | TLS_DHE_RSA_WITH_AES_128_GCM_SHA256 |
