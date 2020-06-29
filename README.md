@@ -14,6 +14,7 @@
 5. <a href="https://github.com/Jakkins/ServerHTTPS#legenda"> Legenda </a>
 
 <h2 align="center">Requirements</h2>
+
 - OpenSSl 1.1.1 (implements support for five TLSv1.3 [cipher suites](#cipher-suite))
     - TLS_AES_256_GCM_SHA384
     - TLS_CHACHA20_POLY1305_SHA256
@@ -22,6 +23,7 @@
     - TLS_AES_128_CCM_SHA256
 
 <h2 align="center">Generate Keys</h2>
+
 ### TLS 1.3 (<a href="https://www.rfc-editor.org/info/rfc8446"> RFC 8446 </a>)
 TLS supports three basic key exchange modes:
 - (EC)DHE (Diffie-Hellman over either finite fields or elliptic curves)
