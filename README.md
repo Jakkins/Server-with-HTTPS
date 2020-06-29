@@ -268,26 +268,24 @@ One PEM file can contain multiple certificates
     - Auth (certificate): {*}RSA, ECDSA
     - Cipher (symmetric encryption algorithms): AES, {*}AES_GCM (AEAD cipher), AES_CBC, Camellia, DES, RC4, RC2
     - Mac (message authentication code): SHA, SHA1, {*}SHA256, SHA384, MD5, MD2
-    <p>
-    Ex. 
-        TLS 1.2 
-        HexadecimalRappresentation : Protocol_KeyExchange_Auth_Cipher_Mac
-    </p>
-            - 0xc02b : TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
-            - 0xc02f : TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-            - 0x009e : TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
-            - 0xcc14 : TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
-            - 0xcc13 : TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
-            - 0xc00a : TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
-            - 0xc014 : TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
-            - 0x0039 : TLS_DHE_RSA_WITH_AES_256_CBC_SHA
-            - 0xc009 : TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
-            - 0xc013 : TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
-            - 0x0033 : TLS_DHE_RSA_WITH_AES_128_CBC_SHA
-            - 0x009c : TLS_RSA_WITH_AES_128_GCM_SHA256
-            - 0x0035 : TLS_RSA_WITH_AES_256_CBC_SHA
-            - 0x002f : TLS_RSA_WITH_AES_128_CBC_SHA
-            - 0x000a : TLS_RSA_WITH_3DES_EDE_CBC_SHA
+
+    Ex. TLS 1.2 
+        | HexadecimalRappresentation | Protocol_KeyExchange_Auth_Cipher_Mac |
+        | 0xc02b | TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 |
+        | 0xc02f | TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 |
+        | 0x009e | TLS_DHE_RSA_WITH_AES_128_GCM_SHA256 |
+        | 0xcc14 | TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 |
+        | 0xcc13 | TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 |
+        | 0xc00a | TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA |
+        | 0xc014 | TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA |
+        | 0x0039 | TLS_DHE_RSA_WITH_AES_256_CBC_SHA |
+        | 0xc009 | TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA |
+        | 0xc013 | TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA |
+        | 0x0033 | TLS_DHE_RSA_WITH_AES_128_CBC_SHA |
+        | 0x009c | TLS_RSA_WITH_AES_128_GCM_SHA256 |
+        | 0x0035 | TLS_RSA_WITH_AES_256_CBC_SHA |
+        | 0x002f | TLS_RSA_WITH_AES_128_CBC_SHA |
+        | 0x000a | TLS_RSA_WITH_3DES_EDE_CBC_SHA |
             
 > When authentication or key exchange are not indicated <b>tipically</b> you can imply that is RSA
 
