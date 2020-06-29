@@ -22,12 +22,13 @@ Implied for TLS 1.3:
 ```
 Example of cipher suite: TLS_AES_128_GCM_SHA256
 
-	| :------- | :------ |
-	| Protocol | TLS 1.3 |
-	| Key Exchange | ECHDE, DHE, chosen from client's supported ciphersuites list |
-	| Certificate authentication (CA) | RSA, DSA, ECDSA, chosen from client's supported ciphersuites list |
-	| Cipher | AES_128_GCM |
-	| Mac | SHA256 |
+| | |
+| :------- | :------ |
+| Protocol | TLS 1.3 |
+| Key Exchange | ECHDE, DHE, chosen from client's supported ciphersuites list |
+| Certificate authentication (CA) | RSA, DSA, ECDSA, chosen from client's supported ciphersuites list |
+| Cipher | AES_128_GCM |
+| Mac | SHA256 |
 
 <h2 align="center">Generate Keys</h2>
 
