@@ -14,12 +14,20 @@
 <h2 align="center">What I'll use</h2>
 
 - OpenSSl 1.1.1 (implements support for five TLSv1.3 [cipher suites](#cipher-suite))
+```
+Implied for TLS 1.3:
+	- Key Exchange / key agreement algorithm: DHE or ECHDE (e.g. not RSA)
+	- Authentication mechanism: RSA or DSA or ECDSA
+	- Ciphers: AEAD ciphers (e.g. not CBC)
+```
+Example of cipher suite: TLS_AES_128_GCM_SHA256
 
-> Implied for TLS 1.3
-
-> Key Exchange: ECDHE (e.g. not RSA)
-
-> Ciphers: AEAD ciphers (e.g. not CBC)
+| :--- | :--- |
+| Protocol | TLS 1.3 |
+| Key Exchange | ECHDE, DHE, chosen from client's supported ciphersuites list |
+| Certificate authentication (CA) | RSA, DSA, ECDSA, chosen from client's supported ciphersuites list |
+| Cipher | AES_128_GCM |
+| Mac | SHA256 |
 
 <h2 align="center">Generate Keys</h2>
 
@@ -272,7 +280,7 @@ One PEM file can contain multiple certificates
     - Cipher (symmetric encryption algorithms): AES, {*}AES_GCM (AEAD cipher), AES_CBC, Camellia, DES, RC4, RC2
     - Mac (message authentication code)(Hashing algorithms): SHA, SHA1, {*}SHA256, SHA384, MD5, MD2
 
-	E.g. TLS 1.2
+	E.g. of TLS 1.2 cipher suites
 
     | HexadecimalRappresentation | Protocol_KeyExchange_Auth_Cipher_Mac |
     | -------------------------- | ------------------------------------ |
