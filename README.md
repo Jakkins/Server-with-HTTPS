@@ -1,6 +1,6 @@
 <h1 align="center">ServerHTTPS</h1>
 
-0. <a href="https://github.com/Jakkins/ServerHTTPS#what-i'll-use"> What I'll use </a>
+0. <a href="https://github.com/Jakkins/ServerHTTPS#what-ill-use"> What I'll use </a>
 1. <a href="https://github.com/Jakkins/ServerHTTPS#generate-keys"> Generate Keys </a>
     - X25519
 2. 
@@ -15,11 +15,11 @@
 
 - OpenSSl 1.1.1 (implements support for five TLSv1.3 [cipher suites](#cipher-suite))
 
-<h2 align="center">Implied</h2>
+> Implied for TLS 1.3
 
-- TLS 1.3
-    - Key Exchange: ECDHE (e.g. not RSA)
-    - Cipher: AEAD ciphers (e.g. not CBC)
+> Key Exchange: ECDHE (e.g. not RSA)
+
+> Ciphers: AEAD ciphers (e.g. not CBC)
 
 <h2 align="center">Generate Keys</h2>
 
@@ -244,7 +244,9 @@ One PEM file can contain multiple certificates
 > [ sources tagged with {M} are for Math theory ]
 ###### Cipher suite:
 - https://en.wikipedia.org/wiki/Cipher_suite
-- {*}[What is a TLS Cipher Suite? - YouTube (2019)](https://www.youtube.com/watch?v=ZM3tXhPV8v0)
+- {!*}[What is a TLS Cipher Suite?](https://www.youtube.com/watch?v=ZM3tXhPV8v0)
+- {!*}[Strong vs. Weak TLS Ciphers](https://www.youtube.com/watch?v=k_C2HcJbgMc)
+- {!*}[What Are AEAD Ciphers?](https://www.youtube.com/watch?v=od44W45sCQ4)
 ---
 - {1} [Difference between pem, csr, key and crt](https://crypto.stackexchange.com/questions/43697/what-is-the-difference-between-pem-csr-key-and-crt)
 - [Easy start https server - YouTube (2016)](https://www.youtube.com/watch?v=8ptiZlO7ROs)
@@ -268,7 +270,7 @@ One PEM file can contain multiple certificates
     - Key Exchange: DH / DHE / {*}ECDHE / ADH, RSA
     - Auth (certificate): {*}RSA, ECDSA
     - Cipher (symmetric encryption algorithms): AES, {*}AES_GCM (AEAD cipher), AES_CBC, Camellia, DES, RC4, RC2
-    - Mac (message authentication code): SHA, SHA1, {*}SHA256, SHA384, MD5, MD2
+    - Mac (message authentication code)(Hashing algorithms): SHA, SHA1, {*}SHA256, SHA384, MD5, MD2
 
 	E.g. TLS 1.2
 
