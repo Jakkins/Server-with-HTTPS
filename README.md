@@ -10,6 +10,17 @@
 4. Try the HTTPS connection
 5. <a href="https://github.com/Jakkins/ServerHTTPS#legenda"> Legenda </a>
 
+<h2 align="center">Differences from TLS1.2 and TLS1.3</h2>
+
+- Removed static RSA
+- Removed custom (EC)DHE groups
+- Removed compression
+- Semi removed (special accommodation fon inline client auth) renegotiation
+- Removed non-AEAD ciphers
+- Removed simplified resumption
+
+[Source](https://www.youtube.com/watch?v=grRi-aFrbSE)
+
 <h2 align="center">What I'll use</h2>
 
 - OpenSSl 1.1.1 (implements support for five TLSv1.3 [cipher suites](#cipher-suite))
