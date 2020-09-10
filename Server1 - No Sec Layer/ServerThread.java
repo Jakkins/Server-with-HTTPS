@@ -18,9 +18,8 @@ public class ServerThread extends Thread {
 
     @Override
     public void run() {
-        // Forse questa e' una sessione...
+        
         try {
-
             // Start handling application content
 
             // INPUT
