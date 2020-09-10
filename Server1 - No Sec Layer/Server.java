@@ -2,14 +2,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-/*
-    (https://www.codejava.net/java-se/networking/java-socket-server-examples-tcp-ip)
-
-    Il server parte e si mette in ascolto.
-
-    Quando arriva una richiesta fa partire un Thread.
-*/
-
 public class Server {
 
     private int port;
