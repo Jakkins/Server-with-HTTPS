@@ -1,0 +1,11 @@
+#!/bin/bash
+# Gen Private K
+openssl genrsa -out private.key 2048
+# Extract Public K
+openssl rsa -in private.key -pubout -out public.key
+# Gen CSR
+openssl req -new -key private.key -out server.csr -subj "/C=IT/ST=Italy/L=The Brands/O=Mosciolo Task Force/OU=SFC/CN=jakkins.who/emailAddress=no"
+# Self Sign CSR
+openssl x509 -in server.csr -out server.crt -req -signkey private.key
+# Generate PKCS#12 or PFX
+openssl pkcs12 -inkey private.key -in server.crt -export -out crt.pfx

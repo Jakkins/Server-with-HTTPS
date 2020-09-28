@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -5,14 +6,21 @@ import java.io.PrintStream;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.security.KeyFactory;
+import java.security.KeyFactorySpi;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.PrivateKey;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -21,70 +29,68 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
-/*
-    > the client initiates a connection
-    > receives the server certificate
-    > verifies it
-    > receives a certificate request from the server and sends its own certificate if it can.
-
-    There is no such thing as a private certificate. 
-    The server verifies the certificate: 
-        (a) by checking its digital signature
-        (b) by forming a trust chain from its signer to a signer it trusts.
-*/
-
 public class Server {
 
     private static final String UNICODE_FORMAT = "UTF-8";
 
     private int port;
     private boolean isServerOn;
-    private KeyStore serveKeyStore;
 
     public Server(int port) {
         this.isServerOn = true;
         this.port = port;
-        
-        createServerCertificate(); // Create Certificate
-
-        createServerKeyStore(); // Create Key Store
-        
+        createServerCertificate();
+        createServerKeyStore();
+        initKeyStore();
     }
 
     private void createServerCertificate() {
-        
+        Utils.getInstance().exec("./script/generatecert");
     }
 
     private void createServerKeyStore() {
         try {
-            serveKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            System.out.println(serveKeyStore.getProvider().getName());
-            System.out.println(serveKeyStore.getProvider().getInfo());
-            System.out.println(serveKeyStore.getProvider().getVersionStr());
-            serveKeyStore.load(null); // null if it's a brand new store
-            
-        } catch (Exception e) { e.printStackTrace(); }
+            System.out.println("> Generating KeyStore");
+            char[] password = Utils.getInstance().getPasswordConsole();
+            KeyStore serverKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            // KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            System.out.println(serverKeyStore.getProvider().getInfo());
+            System.out.println(serverKeyStore.getProvider().getVersionStr());
+
+            serverKeyStore.load(null, password); // To create an empty keystore pass null as the InputStream argument
+
+            // store away the keystore
+            java.io.FileOutputStream fos = null;
+            try {
+                fos = new java.io.FileOutputStream("server.ks");
+                serverKeyStore.store(fos, password);
+            } finally {
+                if (fos != null)
+                    fos.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private static final int keysize = 1024;
-    private static final String commonName = "www.test.it";
-    private static final String organizationalUnit = "IT";
-    private static final String organization = "test";
-    private static final String city = "test";
-    private static final String state = "test";
-    private static final String country = "IT";
-    private static final long validity = 1096; // 3 years
-    private static final String alias = "tomcat";
-    private static final char[] keyPass = "changeit".toCharArray();
+    private void initKeyStore() {
+        System.out.println("> Saving in KeyStore");
+        char[] password = Utils.getInstance().getPasswordConsole();
+        try {
+            KeyStore serverKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            java.io.FileInputStream fis = new java.io.FileInputStream("server.ks");
+            serverKeyStore.load(fis, password);
+            fis.close(); // ???
+            
+            File file = new File("private.key");
+            byte[] encoded = Files.readAllBytes(file.toPath());
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
+            serverKeyStore.setKeyEntry("privateKeyAlias", keySpec.getEncoded(), null);
 
-    public static final String SIGNING_ALG_ID = "SHA256withRSA";
-
-    public static final String CRL_PEM_NAME = "X509 CRL";
-    public static final String CERTIFICATE_PEM_NAME = "CERTIFICATE";
-
-    // Note that using RSA PRIVATE KEY instead of PRIVATE KEY will indicate this is
-    // a PKCS1 format instead of a PKCS8.
-    public static final String PRIVATE_KEY_PEM_NAME = "RSA PRIVATE KEY";
+        } catch (NoSuchAlgorithmException | CertificateException | IOException | KeyStoreException e) {
+            e.printStackTrace();
+        }
+    }
 
     // private void createServerCertificate() {
     //     // (https://stackoverflow.com/questions/12330975/generate-certificate-chain-in-java)

@@ -1,18 +1,19 @@
-- [Caption](#caption)
+- [TRY HARD](#try-hard)
 - [Let's Go (Start Source)](#lets-go-start-source)
+  - [Caption](#caption)
+  - [TODO](#todo)
 - [OpenSSL](#openssl)
-  - [Generate Private Key](#generate-private-key)
-  - [Extract Public Key](#extract-public-key)
-  - [Generate CSR File](#generate-csr-file)
-  - [Verify CSR](#verify-csr)
-  - [Self Sign CSR](#self-sign-csr)
+  - [PKCS#12 or PFX format](#pkcs12-or-pfx-format)
+- [Trust Store vs Key Store](#trust-store-vs-key-store)
+  - [Caption](#caption-1)
+  - [KeyStore](#keystore)
+  - [KeyStore's password vs protection parameters](#keystores-password-vs-protection-parameters)
+    - [Should the protection param contains the KeyStore password? Idk, maybe yes.](#should-the-protection-param-contains-the-keystore-password-idk-maybe-yes)
 - [Other Things](#other-things)
       - [Warnings](#warnings)
-      - [Keystore](#keystore)
+      - [Keystore](#keystore-1)
       - [Client Certificate Authentication](#client-certificate-authentication)
       - [Server Certificates](#server-certificates)
-      - [Truststore](#truststore)
-      - [Keystore](#keystore-1)
       - [PKI](#pki)
 - [Sources](#sources)
 - [JDK](#jdk)
@@ -22,16 +23,21 @@
   - [SSLContext supported](#sslcontext-supported)
   - [BHO](#bho)
 
----
+## TRY HARD
 
-## Caption
-- CA = Certificate Authority
-- CSR = Certificate signing request
-
----
+What I want to do:
+- try to not use sun (Oracle) lib
+- no keytool (use sun lib)
+- cert created and self signed on the fly
+- no Bouncy Castle
 
 ## Let's Go ([Start Source](https://www.youtube.com/watch?v=T4Df5_cojAs))
 
+### Caption
+- CA = Certificate Authority
+- CSR = Certificate signing request
+
+### TODO
 - Set Up Server
   1. Generate Key-Pair
   2. Extract Public Key
@@ -58,30 +64,130 @@
 <p> <img src="./images/HTTPSExchange.png" width="1200"> </p>
 
 ## OpenSSL
+```bash
+#!/bin/bash
+# Gen Private K
+openssl genrsa -out private.key 2048
+# Extract Public K
+openssl rsa -in private.key -pubout -out public.key
+# Gen CSR
+openssl req -new -key private.key -out server.csr -subj "/C=IT/ST=Italy/L=The Brands/O=Mosciolo Task Force/OU=SFC/CN=jakkins.who/emailAddress=no"
+# Self Sign CSR
+openssl x509 -in server.csr -out server.crt -req -signkey private.key
+```
+OR
+```java
+private void createServerCertificate() {
+  // Generate Private Key
+  CommandLauncher.getInstance().exec("openssl genrsa -out private.key 2048");
+  // Extract Public Key
+  CommandLauncher.getInstance().exec("openssl rsa -in private.key -pubout -out public.key");
+  // Generate CSR
+  CommandLauncher.getInstance().exec("openssl req -new -key private.key -out server.csr -subj \"/C=IT/ST=Italy/L=The Brands/O=Mosciolo Task Force/OU=SFC/CN=jakkins.who/emailAddress=no\"");
+  // Self Sign CSR
+  CommandLauncher.getInstance().exec("openssl x509 -in server.csr -out server.crt -req -signkey private.key");
+}
+```
 
-### Generate Private Key
-```
-> openssl genrsa -out private.key 2048
-```
-### Extract Public Key
-```
-> openssl rsa -in private.key -pubout -out public.key
-```
-### Generate CSR File
-```
-> openssl req -new -key private.key -out server.csr
+### PKCS#12 or PFX format
 
-> openssl req -new -key private.key -out server.csr -subj "/C=IT/ST=Italy/L=The Brands/O=Mosciolo Task Force/OU=SFC/CN=Jakkins/emailAddress=no"
-```
-### Verify CSR
-```
-> openssl req -text -in server.csr -noout -verify
-```
-### Self Sign CSR
-```
-> openssl x509 -in server.csr -out server.crt -req -signkey private.key
+PKCS#12 = private key + server certificate and any intermediate certificates
+
+**PFX files are usually found with the extensions .pfx and .p12**
+
+```bash
+#!/bin/bash
+# Create PFX
+openssl pkcs12 -inkey private.key -in server.crt -export -out crt.pfx
+
+Breaking down the command:
+  openssl               : the command for executing OpenSSL
+  pkcs12                : the file utility for PKCS#12 files in OpenSSL
+  -export -out crt.pfx  : export and save the PFX file as crt.pfx
+  -inkey private.key    : use the private key file private.key as the private key to combine with the certificate.
+  -in server.crt        : use server.crt as the certificate the private key will be combined with.
+  -certfile more.crt    : This is optional, this is if you have any additional certificates you would like to include in the PFX file.
 ```
 
+## [Trust Store vs Key Store](https://stackoverflow.com/questions/6340918/trust-store-vs-key-store-creating-with-keytool/6341566#6341566)
+
+### Caption
+
+- KeyStore
+  - come in various formats and are not even necessarily file
+  - determines the authentication credentials to send to the remote host
+  - contains your private keys and certificates
+- TrustStore
+  - determines the remote authentication credentials which should be trusted
+  - contains CA certificates to trust
+- keytool
+  - a tool to perform various operations on KeyStore and TrustStore (import/export/list/...)
+
+```
+The javax.net.ssl.keyStore and javax.net.ssl.trustStore parameters are the default parameters used to build KeyManagers and TrustManagers (respectively), then used to build an SSLContext which essentially contains the SSL/TLS settings to use when making an SSL/TLS connection via an SSLSocketFactory or an SSLEngine.
+
+In some cases, they can be one and the same store, although it's often better practice to use distinct stores 
+```
+
+### [KeyStore](https://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.html)
+
+- KeyStore's password is used to
+  - load the keystore
+  - protect the private key entry
+  - protect the secret key entry
+  - store the keystore
+
+different passwords or other protection parameters may also be used. 
+
+### KeyStore's password vs protection parameters
+
+[Source](https://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.ProtectionParameter.html)
+```
+The information stored in a ProtectionParameter object protects the contents of a keystore. 
+For example, protection parameters may be used to check the integrity of keystore data, 
+or to protect the confidentiality of sensitive keystore data (such as a PrivateKey).
+```
+#### Should the protection param contains the KeyStore password? Idk, maybe yes.
+
+```java
+// Doc
+java.security.KeyStore.setKeyEntry(String alias, byte[] key, Certificate[] chain)
+java.security.KeyStore.setEntry(String alias, Entry entry, ProtectionParameter protParam)
+
+java.security.KeyStore.store(OutputStream stream, char[] password) // to save the KeyStore
+
+// Example
+KeyStore.ProtectionParameter protectionParam = new KeyStore.PasswordProtection(keystorePassword);
+
+// Example secret key
+javax.crypto.SecretKey mySecretKey = getSecretKey();
+KeyStore.SecretKeyEntry skEntry = new KeyStore.SecretKeyEntry(mySecretKey);
+serverKeyStore.setKeyEntry("secretKeyAlias", skEntry, null);
+
+// Example 2
+File file = new File("private.key");
+byte[] encoded = Files.readAllBytes(file.toPath());
+
+// Example 3
+KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+File file = new File("private.key");
+byte[] encoded = Files.readAllBytes(file.toPath());
+PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
+RSAPrivateKey privKey = (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
+```
+```
+KeyStore.setKeyEntry usage (not sure)
+private key + certificate
+secret key + null
+```
+```
+openssl private key format is specified in PKCS#1 as the RSAPrivateKey ASN.1 structure. 
+It is not compatible with java's PKCS8EncodedKeySpec, which is based on the SubjectPublicKeyInfo ASN.1 structure.
+```
+
+
+
+---
 
 ## Other Things
 
@@ -122,11 +228,6 @@ But if you want to use BC [link...](https://stackoverflow.com/questions/14930381
 "A server certificate is sent from the server to the client at the start of a session and is used by the client to authenticate the server"
   - Of the two, server certificates are more commonly used. In fact, it's integral to every SSL or TLS session. Client certificates are not. They're rarely used because:
 
-##### Truststore
-"Determines the remote authentication credentials which should be trusted"
-##### Keystore
-"Determines the authentication credentials to send to the remote host"
-
 ##### PKI
 A public key infrastructure (PKI) consists of:
   - A certificate authority (CA) that stores, issues and signs the digital certificates;
@@ -142,9 +243,9 @@ Recommended:
 - [I'm starting to hate keytool](https://www.digitalocean.com/community/tutorials/java-keytool-essentials-working-with-java-keystores)
 - [Some Caption](https://alvinalexander.com/java/java-keytool-keystore-certificates/)
 - [Caption](https://www.jscape.com/blog/client-certificate-authentication)
-- [Trust Store vs Key Store](https://stackoverflow.com/questions/6340918/trust-store-vs-key-store-creating-with-keytool/6341566#6341566)
 - [How to Create, Write to and Read a Keystore File Using Java (Simple)](https://www.youtube.com/watch?v=qWKwuHgWwtk) (2020/05/26)
 - [Why Developers Should Not Write Programs That Call 'sun' Packages](https://www.oracle.com/java/technologies/faq-sun-packages.html)
+- [OpenSSL](https://github.com/openssl)
 
 Other:
 - [baeldung.com/java-ssl](https://www.baeldung.com/java-ssl)
