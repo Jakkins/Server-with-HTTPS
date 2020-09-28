@@ -1,6 +1,13 @@
+- [Caption](#caption)
 - [Let's Go (Start Source)](#lets-go-start-source)
+- [OpenSSL](#openssl)
+  - [Generate Private Key](#generate-private-key)
+  - [Extract Public Key](#extract-public-key)
+  - [Generate CSR File](#generate-csr-file)
+  - [Verify CSR](#verify-csr)
+  - [Self Sign CSR](#self-sign-csr)
+- [Other Things](#other-things)
       - [Warnings](#warnings)
-      - [Caption](#caption)
       - [Keystore](#keystore)
       - [Client Certificate Authentication](#client-certificate-authentication)
       - [Server Certificates](#server-certificates)
@@ -15,6 +22,14 @@
   - [SSLContext supported](#sslcontext-supported)
   - [BHO](#bho)
 
+---
+
+## Caption
+- CA = Certificate Authority
+- CSR = Certificate signing request
+
+---
+
 ## Let's Go ([Start Source](https://www.youtube.com/watch?v=T4Df5_cojAs))
 
 - Set Up Server
@@ -22,16 +37,13 @@
   2. Extract Public Key
   3. Generate CSR File
 
-- Sign the CSR 
-  - Now the server can
-    - Generate Self-signed Certificate
-      1. Generate Key-pair for the local CA
-      2. Use the keys to self-sigh the Certificate signing request (CSR)
-    - Ask to a Certificate Authority to sign its certificate
-      1. send the CSR to the CA
-      2. The CA make some controls, I suppose
-      3. The CA sign the certificate with it's private key
-        - Now anyone who has the public key of the CA can verify who really signed
+- **Now to sign the CSR the server can**:
+  - Self-signed his own CSR
+    1. Use the private keys to self-sign the CSR
+  - Ask to a Certificate Authority to sign its certificate
+    1. send the CSR to a CA
+    2. The CA sign the certificate with it's private key
+       - Now anyone who has the public key of the CA can verify who really signed
 
 - Exchange (TLS1.2??)
    1. Client ask for www.youtube.com
@@ -43,15 +55,44 @@
    7. youtube receive the encrypted key, so it will decrypt it with its private key to gain the secret key
    8. the client and the server are the only ones to know about that secret key
 
-<p> <img src="./HTTPSExchange.png" width="1200"> </p>
+<p> <img src="./images/HTTPSExchange.png" width="1200"> </p>
 
----
+## OpenSSL
+
+### Generate Private Key
+```
+> openssl genrsa -out private.key 2048
+```
+### Extract Public Key
+```
+> openssl rsa -in private.key -pubout -out public.key
+```
+### Generate CSR File
+```
+> openssl req -new -key private.key -out server.csr
+
+> openssl req -new -key private.key -out server.csr -subj "/C=IT/ST=Italy/L=The Brands/O=Mosciolo Task Force/OU=SFC/CN=Jakkins/emailAddress=no"
+```
+### Verify CSR
+```
+> openssl req -text -in server.csr -noout -verify
+```
+### Self Sign CSR
+```
+> openssl x509 -in server.csr -out server.crt -req -signkey private.key
+```
+
+
+## Other Things
 
 ##### Warnings
 
 [try harder](https://stackoverflow.com/questions/61535731/replacement-for-all-sun-security-package)
+
 [open source partial replacement](https://stackoverflow.com/questions/29622811/open-source-replacement-for-sun-security-rsa-rsapublickeyimpl)
+
 [source](https://stackoverflow.com/questions/28603005/replace-classes-from-sun-security-packages)
+
 [more](https://stackoverflow.com/questions/29060064/sun-security-x509-certandkeygen-and-sun-security-pkcs-pkcs10-missing-in-jdk8)
 ```
 Q: replace classes from sun.security.* packages
@@ -67,11 +108,6 @@ But if you want to use BC [link...](https://stackoverflow.com/questions/14930381
 - NO SHA1, use SHA256
 - The Certificate Authority has key-pair
 - When you install a SO some certificate are already installed
-
-##### Caption
-
-CA = Certificate Authority
-CSR = Certificate signing request
 
 ##### Keystore
 "Is a binary file that contains a set of private keys. You must keep your keystore in a safe and secure place."
@@ -248,7 +284,7 @@ JSSE is a security component of the Java SE platform, and is based on the same d
 JSSE uses the cryptographic service providers defined by the JCA framework.
 
 <p align="center">
-  <img src="./jsse-classes-and-interfaces.png">
+  <img src="./images/jsse-classes-and-interfaces.png">
 </p>
 
 **SSLSocket extends the Socket class and provides secure socket.**
