@@ -11,6 +11,7 @@
   - [KeyStore's password vs protection parameters](#keystores-password-vs-protection-parameters)
     - [Should the protection param contains the KeyStore password? Idk, maybe yes.](#should-the-protection-param-contains-the-keystore-password-idk-maybe-yes)
   - [How to read from file](#how-to-read-from-file)
+    - [PKCS8EncodedKeySpec read only binary](#pkcs8encodedkeyspec-read-only-binary)
 - [Other Things](#other-things)
       - [Warnings](#warnings)
       - [Keystore](#keystore-1)
@@ -75,6 +76,7 @@ What I want to do:
   - An Apache Server uses .crt, .cer files
   - Only way to tell the difference between PEM .cer and DER .cer is to open the file in a Text editor and look for the BEGIN/END statements.
 - [Source 2](http://www.herongyang.com/Cryptography/keytool-Import-Key-What-Is-PKCS-8.html)
+- [Source 3 - Importing PEM certificate into Java KeyStore programmatically](https://stackoverflow.com/questions/51352762/importing-pem-certificate-into-java-keystore-programmatically)
 
 ```
 PEM Format
@@ -204,9 +206,26 @@ or to protect the confidentiality of sensitive keystore data (such as a PrivateK
 ```
 #### Should the protection param contains the KeyStore password? Idk, maybe yes.
 
+### How to read from file
+
+```java
+File file = new File("private.key");
+byte[] encoded = Files.readAllBytes(file.toPath());
+
+// OR
+
+InputStream privateKey = new FileInputStream("private.key");
+byte[] encoded = privateKey.readAllBytes();
+```
+
+#### PKCS8EncodedKeySpec read only binary
+
+
 ```java
 // Doc
 java.security.KeyStore.setKeyEntry(String alias, byte[] key, Certificate[] chain)
+java.security.KeyStore.setKeyEntry(String alias, Key key, char[] password, Certificate[] chain)
+
 java.security.KeyStore.setEntry(String alias, Entry entry, ProtectionParameter protParam)
 java.security.KeyStore.setCertificateEntry(String alias, Certificate cert)
 
@@ -228,7 +247,7 @@ byte[] encoded = Files.readAllBytes(file.toPath());
 KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 File file = new File("private.key");
 byte[] encoded = Files.readAllBytes(file.toPath());
-PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
+PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded); // NO
 RSAPrivateKey privKey = (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
 ```
 ```
@@ -241,17 +260,6 @@ openssl private key format is specified in PKCS#1 as the RSAPrivateKey ASN.1 str
 It is not compatible with java's PKCS8EncodedKeySpec, which is based on the SubjectPublicKeyInfo ASN.1 structure.
 ```
 
-### How to read from file
-
-```java
-File file = new File("private.key");
-byte[] encoded = Files.readAllBytes(file.toPath());
-
-// OR
-
-InputStream privateKey = new FileInputStream("private.key");
-byte[] encoded = privateKey.readAllBytes();
-```
 
 
 

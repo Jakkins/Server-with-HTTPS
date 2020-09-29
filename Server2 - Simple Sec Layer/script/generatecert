@@ -1,11 +1,19 @@
 #!/bin/bash
 echo gen private
 openssl genrsa -out private.key 2048
+
 echo gen public
 openssl rsa -in private.key -pubout -out public.key
+
+echo format private key in pkcs8
+openssl pkcs8 -topk8 -nocrypt -in private.key -out private.pem
+
 echo gen CSR
-openssl req -new -key private.key -out server.csr -subj "/C=IT/ST=Italy/L=The Brands/O=Mosciolo Task Force/OU=SFC/CN=jakkins.who/emailAddress=no"
+openssl req -new -key private.pem -out server.csr -subj "/C=IT/ST=Italy/L=The Brands/O=Mosciolo Task Force/OU=SFC/CN=jakkins.who/emailAddress=no"
+# openssl req -new -key private.key -out server.csr -subj "/C=IT/ST=Italy/L=The Brands/O=Mosciolo Task Force/OU=SFC/CN=jakkins.who/emailAddress=no"
+
 echo self sign CSR
-openssl x509 -in server.csr -out server.crt -req -signkey private.key
+openssl x509 -in server.csr -out server.crt -req -signkey private.pem
+
 echo gen PKCS#12 or PFX
-openssl pkcs12 -inkey private.key -in server.crt -export -out crt.pfx
+# openssl pkcs12 -inkey private.key -in server.crt -export -out crt.pfx
