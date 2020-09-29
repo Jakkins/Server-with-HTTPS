@@ -3,12 +3,14 @@
   - [Caption](#caption)
   - [TODO](#todo)
 - [OpenSSL](#openssl)
+  - [PKCS#1 and PKCS#8 format](#pkcs1-and-pkcs8-format)
   - [PKCS#12 or PFX format](#pkcs12-or-pfx-format)
 - [Trust Store vs Key Store](#trust-store-vs-key-store)
   - [Caption](#caption-1)
   - [KeyStore](#keystore)
   - [KeyStore's password vs protection parameters](#keystores-password-vs-protection-parameters)
     - [Should the protection param contains the KeyStore password? Idk, maybe yes.](#should-the-protection-param-contains-the-keystore-password-idk-maybe-yes)
+  - [How to read from file](#how-to-read-from-file)
 - [Other Things](#other-things)
       - [Warnings](#warnings)
       - [Keystore](#keystore-1)
@@ -30,6 +32,7 @@ What I want to do:
 - no keytool (use sun lib)
 - cert created and self signed on the fly
 - no Bouncy Castle
+- No Portecle
 
 ## Let's Go ([Start Source](https://www.youtube.com/watch?v=T4Df5_cojAs))
 
@@ -64,6 +67,57 @@ What I want to do:
 <p> <img src="./images/HTTPSExchange.png" width="1200"> </p>
 
 ## OpenSSL
+
+- [Master Source](https://www.openssl.org/docs/)
+- [Source 0](https://adamtheautomator.com/install-openssl-powershell/)
+- [Source 1 - differences between PEM, DER, P7B/PKCS#7, PFX/PKCS#12 certificates](https://myonlineusb.wordpress.com/2011/06/19/what-are-the-differences-between-pem-der-p7bpkcs7-pfxpkcs12-certificates/)
+  - A Windows Server uses .pfx files
+  - An Apache Server uses .crt, .cer files
+  - Only way to tell the difference between PEM .cer and DER .cer is to open the file in a Text editor and look for the BEGIN/END statements.
+- [Source 2](http://www.herongyang.com/Cryptography/keytool-Import-Key-What-Is-PKCS-8.html)
+
+```
+PEM Format
+It is the most common format that Certificate Authorities issue certificates in. 
+It contains the ‘—–BEGIN CERTIFICATE—–” and “—–END CERTIFICATE—–” statements.
+Several PEM certificates and even the Private key can be included in one file, one below the other. 
+But most platforms(eg:- Apache) expects the certificates and Private key to be in separate files.
+> They are Base64 encoded ACII files
+> They have extensions such as .pem, .crt, .cer, .key
+> Apache and similar servers uses PEM format certificates
+
+DER Format
+It is a Binary form of ASCII PEM format certificate. 
+All types of Certificates & Private Keys can be encoded in DER format
+> They are Binary format files
+> They have extensions .cer & .der
+> DER is typically used in Java platform
+
+P7B/PKCS#7
+They contain “—–BEGIN PKCS—–” & “—–END PKCS7—–” statements. 
+It can contain only Certificates & Chain certificates but not the Private key.
+> They are Base64 encoded ASCII files
+> They have extensions .p7b, .p7c
+> Several platforms supports it. eg:- Windows OS, Java Tomcat
+
+PKCS#8
+Available as rfc5208 on the other hand is a standard for handling private keys for all algorithms, not just RSA.
+Since most systems today need to support multiple algorithms, and wish to be able to adapt to new algorithms as they are developed, PKCS8 is preferred for private keys, and a similar any-algorithm scheme defined by X.509 for public keys. Although PKCS12/PFX is often preferred to both.
+When writing a private key in PKCS#8 format in a file, it needs to stored in either DER encoding or PEM encoding. 
+> contains a single private key
+> can be encrypted to protect the private key
+
+PFX/PKCS#12
+They are used for storing the Server certificate, any Intermediate certificates & Private key in one encryptable file.
+> They are Binary format files
+> They have extensions .pfx, .p12
+> Typically used on Windows OS to import and export certificates and Private keys
+```
+
+- [Util 0](https://www.sslshopper.com/)
+
+### [PKCS#1 and PKCS#8 format](https://stackoverflow.com/questions/48958304/pkcs1-and-pkcs8-format-for-rsa-private-key)
+
 ```bash
 #!/bin/bash
 # Gen Private K
@@ -77,6 +131,7 @@ openssl x509 -in server.csr -out server.crt -req -signkey private.key
 ```
 OR
 ```java
+// or ProcessBuilder pb = new ProcessBuilder("ls", "-a", "-l");
 private void createServerCertificate() {
   // Generate Private Key
   CommandLauncher.getInstance().exec("openssl genrsa -out private.key 2048");
@@ -91,7 +146,7 @@ private void createServerCertificate() {
 
 ### PKCS#12 or PFX format
 
-PKCS#12 = private key + server certificate and any intermediate certificates
+**PKCS#12 = (bundle of) private key + server certificate and any intermediate certificates**
 
 **PFX files are usually found with the extensions .pfx and .p12**
 
@@ -153,6 +208,7 @@ or to protect the confidentiality of sensitive keystore data (such as a PrivateK
 // Doc
 java.security.KeyStore.setKeyEntry(String alias, byte[] key, Certificate[] chain)
 java.security.KeyStore.setEntry(String alias, Entry entry, ProtectionParameter protParam)
+java.security.KeyStore.setCertificateEntry(String alias, Certificate cert)
 
 java.security.KeyStore.store(OutputStream stream, char[] password) // to save the KeyStore
 
@@ -184,6 +240,38 @@ secret key + null
 openssl private key format is specified in PKCS#1 as the RSAPrivateKey ASN.1 structure. 
 It is not compatible with java's PKCS8EncodedKeySpec, which is based on the SubjectPublicKeyInfo ASN.1 structure.
 ```
+
+### How to read from file
+
+```java
+File file = new File("private.key");
+byte[] encoded = Files.readAllBytes(file.toPath());
+
+// OR
+
+InputStream privateKey = new FileInputStream("private.key");
+byte[] encoded = privateKey.readAllBytes();
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

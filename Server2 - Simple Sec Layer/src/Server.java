@@ -6,21 +6,18 @@ import java.io.PrintStream;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.security.KeyFactory;
-import java.security.KeyFactorySpi;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.Certificate;
+import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -52,8 +49,8 @@ public class Server {
         try {
             System.out.println("> Generating KeyStore");
             char[] password = Utils.getInstance().getPasswordConsole();
-            KeyStore serverKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            // KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            // KeyStore serverKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            KeyStore serverKeyStore = KeyStore.getInstance("PKCS12");
             System.out.println(serverKeyStore.getProvider().getInfo());
             System.out.println(serverKeyStore.getProvider().getVersionStr());
 
@@ -77,15 +74,24 @@ public class Server {
         System.out.println("> Saving in KeyStore");
         char[] password = Utils.getInstance().getPasswordConsole();
         try {
-            KeyStore serverKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            //KeyStore serverKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            KeyStore serverKeyStore = KeyStore.getInstance("PKCS12");
             java.io.FileInputStream fis = new java.io.FileInputStream("server.ks");
             serverKeyStore.load(fis, password);
-            fis.close(); // ???
+            //fis.close(); // ???
             
-            File file = new File("private.key");
-            byte[] encoded = Files.readAllBytes(file.toPath());
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-            serverKeyStore.setKeyEntry("privateKeyAlias", keySpec.getEncoded(), null);
+            InputStream privateKey = new FileInputStream("private.key");
+            byte[] encoded = privateKey.readAllBytes();
+            System.out.println(new String(encoded));
+            // RSAPrivateKey kp = 
+            // PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
+
+            InputStream certificateInputStream = new FileInputStream("server.crt");
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            java.security.cert.Certificate cert = cf.generateCertificate(certificateInputStream);
+            java.security.cert.Certificate[] chain = { cert };
+
+            serverKeyStore.setKeyEntry("privateKeyAlias", encoded, chain);
 
         } catch (NoSuchAlgorithmException | CertificateException | IOException | KeyStoreException e) {
             e.printStackTrace();
@@ -108,7 +114,7 @@ public class Server {
     //         X509Certificate cert = null;
     //         try { 
     //             CertificateFactory cf = CertificateFactory.getInstance("X509");
-    //             //cert = (X509Certificate) cf.generateCertificate(inStream;
+    //             //cert = (X509Certificate) cf.generateCertificate(inStream);
     //         } // TODO
     //         catch (Exception ex) { }
 
@@ -205,11 +211,9 @@ public class Server {
     private X509Certificate generateX509Certificate(String dname, KeyPair pair, int days, String algorithm) 
         throws Exception { 
         
-        ProcessBuilder pb = new ProcessBuilder("ls", "-a", "-l");
-        
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         InputStream certificateInputStream = new FileInputStream("my-x509-certificate.crt");
-        Certificate certificate = certificateFactory.generateCertificate(certificateInputStream);
+        //Certificate certificate = certificateFactory.generateCertificate(certificateInputStream);
         
         // PrivateKey privkey = pair.getPrivate();
         // X509CertInfo info = new X509CertInfo();

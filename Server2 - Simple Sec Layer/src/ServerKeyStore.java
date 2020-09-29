@@ -6,7 +6,9 @@ import java.security.KeyStore;
 
 import javax.crypto.SecretKey;
 
-/*
+public class ServerKeyStore {
+
+    /*
     List of KeyStore Types supported
     - PKCS12
     - JKS, Java Key Store
@@ -16,7 +18,8 @@ import javax.crypto.SecretKey;
     If you're not using the JCE, then the answer is easy. Your only option
     is to use the JKS keystore. If, however, you have installed the JCE and
     you are using JCE functionality, then your best bet is the JCEKS
-    keystore. This keystore provides much stronger protection for stored
+    keystore. 
+    This keystore provides much stronger protection for stored
     private keys by using Triple DES encryption.
     Migrating up from JKS to JCEKS is relatively easy. You can find
     complete instructions at:
@@ -27,8 +30,7 @@ import javax.crypto.SecretKey;
     - BKS, using the BouncyCastle provider (commonly used for Android).
     - Windows-MY/Windows-ROOT, if you want to access the Windows certificate store directly.
     - KeychainStore, if you want to use the OSX keychain directly.
-*/
-public class ServerKeyStore {
+    */
 
     private KeyStore ks;
     private String path;
@@ -42,8 +44,8 @@ public class ServerKeyStore {
     }
 
     /*
-     * alias = anything you want, a name to identify the entry certificate = if you
-     * use a secret key you don't need this
+     * alias = anything you want, a name to identify the entry 
+     * certificate = if you use a secret key you don't need this
      */
     public void StoreToKeyStore(SecretKey key, String password) throws Exception {
         ks.load(new FileInputStream(path), password.toCharArray());
