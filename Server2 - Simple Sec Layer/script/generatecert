@@ -15,5 +15,5 @@ openssl req -new -key private.pem -out server.csr -subj "/C=IT/ST=Italy/L=The Br
 echo self sign CSR
 openssl x509 -in server.csr -out server.crt -req -signkey private.pem
 
-echo gen PKCS#12 or PFX
+# echo gen PKCS#12 or PFX
 # openssl pkcs12 -inkey private.key -in server.crt -export -out crt.pfx

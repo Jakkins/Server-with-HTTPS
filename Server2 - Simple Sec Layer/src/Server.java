@@ -1,126 +1,44 @@
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.math.BigInteger;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.file.Files;
 import java.security.KeyFactory;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 public class Server {
 
+    private static final Pattern PRIVATE_KEY_PATTERN = Pattern
+            .compile("-----BEGIN PRIVATE KEY-----(.*?)-----END PRIVATE KEY-----", Pattern.DOTALL);
+    private static final String NEW_LINE = "\n";
+    private static final String EMPTY = "";
     private static final String UNICODE_FORMAT = "UTF-8";
 
     private int port;
-    private boolean isServerOn;
 
     public Server(int port) {
-        this.isServerOn = true;
         this.port = port;
         createServerCertificate();
         createServerKeyStore();
-        tryhard();
-        // initKeyStore();
+        initKeyStore();
     }
-
-    private void tryhard() {
-        System.out.println("TRY HARD");
-        InputStream pkey;
-        try {
-            pkey = new FileInputStream("private.pem");
-            //PEMParser pemParser = new PEMParser(new FileReader("private.pem"));
-
-            String keyString = 
-            "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDPmpKmXAzMliYF" +
-            "KyEFHf1X50/ckbDZfZGRa8dLL4Kf3jTd6/OF/vvn+6YDHSfiRq6QiWXJ57MMlMcs" +
-            "8z8NDQqaDdW3P99njO2tZAi28r7V2UXn1SYj7i5Z5gOKK40A2hUuiyHZenezGCqn" +
-            "eyHLEEZjBtN8Wh+3t+jUUE7zcVngKaY5rnu1e9hz6lpwbKw+NgeJICJQwkHPCOZk" +
-            "xh2WXUoyAKwHx9NuXX6OPqSQb25jZ76qlvtQwt6EKuGyu7Y4WfUpEP1u8fJLfo1e" +
-            "GNT+80PcIdA5wqKUiKlqubmk+Vqpq3s0uCoH+n9lAn2PScOdVTSukpeZ3tlVDZf2" +
-            "3PEyw1fBAgMBAAECggEAUZdhfYp96UY1qSBbOOShdhPN+lU0GTZVqL6gM/d3Mhel" +
-            "1XZvXkFphbIMe/rQewjmgJ3PaHvsjcxHP25WYG24tfUsAnpS9iKYIuZG2ogq4mcj" +
-            "J0tJUyPACcrxpzMYlrYfTwyVgCC2vKeJ1Ar7rBA4aaD8K0pMXusj0ZXCgcER3pwq" +
-            "pqhaRO+G8MES3ikPrxVBl5TYmGcVkq2m3WJL+8xIsN6QB6FBBFZFNfV7lRY06/EQ" +
-            "SfUF5Zdc6Z9jWch3TXovamIeKSMM65mVmw2mZE6jkzVG3vNBGUr2gmz+AD8XTwR2" +
-            "sB7BmplBlJ0rj9BXDZUwGXCv4yhigPfvG23dasJLBQKBgQDn5W+Nn5Ie2gfdk6UL" +
-            "6FUY/o+tGXqxD/LjO1h+w3lxW4etxH5TQW+SGG0a/buEfLms5RBNTvizm8784DpU" +
-            "sfp/GM84aGMyx+ug9G0EZlQL3g85oqYhplGCMruMaQg5rDKtbS73GmHsbk7rzGHy" +
-            "mC/nHA3D34M+4Ab1gSJXNHIfqwKBgQDlLrxfFvVnlNDPWB/B42QwqEwsxIvgcKed" +
-            "LUr6q2jTm7r4N84AacNwUbudzaS3f6v9aAGqux7aa+Ed+FhclfPVEzu7MYCLbUka" +
-            "qaqHPIvbzzEM9klRfGw1tLucVJb+/1zRgr5OViLiUXy2y11Y1oJipZWFermwkWhQ" +
-            "lp4T+BkqQwKBgD1pmZ1cAQqCm0qm6zK4GLFB2TLyaHezzZM4CDup8OOAZfIy83GB" +
-            "Btcd+OcJAzwW++U51JNksqB+RtbZWxlK+Rfnrhk2K+8q2tAJa0WbA+8Qo9+Tn4OR" +
-            "1Ewyu1B4EGGVpOYg4Cs4pW5D2ErCGb5xZ15BI7QX4V4pXi5uQHXvwbl5AoGBAOF+" +
-            "RHVC/540u+bmjAiXFWMSlDCQChiAf0qU3+sXcAKUfTfwoE2jwlnm8TRou6KYib7A" +
-            "8LLtfYPnFQ4J5dbi65BAZkref92vX3hOa6y4E9voVhis0qLMSyPkeZttV0v6MXcq" +
-            "rtggxB3tk0m/ek8IcC1jQmScxctGpl50c4CuYQRFAoGAZbnKSW9nOrQEyh4LEnik" +
-            "u1ACZvJhxH/khj6oqhV02CgcCYU2hq4/erjqNxb/aI5b4nr7UoEQXgScPOWhWA7L" +
-            "Gclb6cAon3+MO1BJm6qKmkjBRAzWqjffreiYGshHWUTfhTs4hjUmzwc88Jkv2eyO" +
-            "6feUsvGInQA1t3pt9R2BGeM=";
-            System.out.println(keyString);
-            
-
-            byte[] encoded = keyString.getBytes();
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyString.getBytes());
-            RSAPrivateKey privateKey = (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(keySpec);
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // String keyString = String.join(
-    //         "\n",
-    //         "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDPmpKmXAzMliYF",
-    //         "KyEFHf1X50/ckbDZfZGRa8dLL4Kf3jTd6/OF/vvn+6YDHSfiRq6QiWXJ57MMlMcs",
-    //         "8z8NDQqaDdW3P99njO2tZAi28r7V2UXn1SYj7i5Z5gOKK40A2hUuiyHZenezGCqn",
-    //         "eyHLEEZjBtN8Wh+3t+jUUE7zcVngKaY5rnu1e9hz6lpwbKw+NgeJICJQwkHPCOZk",
-    //         "xh2WXUoyAKwHx9NuXX6OPqSQb25jZ76qlvtQwt6EKuGyu7Y4WfUpEP1u8fJLfo1e",
-    //         "GNT+80PcIdA5wqKUiKlqubmk+Vqpq3s0uCoH+n9lAn2PScOdVTSukpeZ3tlVDZf2",
-    //         "3PEyw1fBAgMBAAECggEAUZdhfYp96UY1qSBbOOShdhPN+lU0GTZVqL6gM/d3Mhel",
-    //         "1XZvXkFphbIMe/rQewjmgJ3PaHvsjcxHP25WYG24tfUsAnpS9iKYIuZG2ogq4mcj",
-    //         "J0tJUyPACcrxpzMYlrYfTwyVgCC2vKeJ1Ar7rBA4aaD8K0pMXusj0ZXCgcER3pwq",
-    //         "pqhaRO+G8MES3ikPrxVBl5TYmGcVkq2m3WJL+8xIsN6QB6FBBFZFNfV7lRY06/EQ",
-    //         "SfUF5Zdc6Z9jWch3TXovamIeKSMM65mVmw2mZE6jkzVG3vNBGUr2gmz+AD8XTwR2",
-    //         "sB7BmplBlJ0rj9BXDZUwGXCv4yhigPfvG23dasJLBQKBgQDn5W+Nn5Ie2gfdk6UL",
-    //         "6FUY/o+tGXqxD/LjO1h+w3lxW4etxH5TQW+SGG0a/buEfLms5RBNTvizm8784DpU",
-    //         "sfp/GM84aGMyx+ug9G0EZlQL3g85oqYhplGCMruMaQg5rDKtbS73GmHsbk7rzGHy",
-    //         "mC/nHA3D34M+4Ab1gSJXNHIfqwKBgQDlLrxfFvVnlNDPWB/B42QwqEwsxIvgcKed",
-    //         "LUr6q2jTm7r4N84AacNwUbudzaS3f6v9aAGqux7aa+Ed+FhclfPVEzu7MYCLbUka",
-    //         "qaqHPIvbzzEM9klRfGw1tLucVJb+/1zRgr5OViLiUXy2y11Y1oJipZWFermwkWhQ",
-    //         "lp4T+BkqQwKBgD1pmZ1cAQqCm0qm6zK4GLFB2TLyaHezzZM4CDup8OOAZfIy83GB",
-    //         "Btcd+OcJAzwW++U51JNksqB+RtbZWxlK+Rfnrhk2K+8q2tAJa0WbA+8Qo9+Tn4OR",
-    //         "1Ewyu1B4EGGVpOYg4Cs4pW5D2ErCGb5xZ15BI7QX4V4pXi5uQHXvwbl5AoGBAOF+",
-    //         "RHVC/540u+bmjAiXFWMSlDCQChiAf0qU3+sXcAKUfTfwoE2jwlnm8TRou6KYib7A",
-    //         "8LLtfYPnFQ4J5dbi65BAZkref92vX3hOa6y4E9voVhis0qLMSyPkeZttV0v6MXcq",
-    //         "rtggxB3tk0m/ek8IcC1jQmScxctGpl50c4CuYQRFAoGAZbnKSW9nOrQEyh4LEnik",
-    //         "u1ACZvJhxH/khj6oqhV02CgcCYU2hq4/erjqNxb/aI5b4nr7UoEQXgScPOWhWA7L",
-    //         "Gclb6cAon3+MO1BJm6qKmkjBRAzWqjffreiYGshHWUTfhTs4hjUmzwc88Jkv2eyO",
-    //         "6feUsvGInQA1t3pt9R2BGeM=");
-    //         System.out.println(keyString);
 
     private void createServerCertificate() {
         Utils.getInstance().exec("./script/generatecert");
@@ -152,6 +70,7 @@ public class Server {
     }
 
     private void initKeyStore() {
+        // RSAPrivateKey or PrivateKey ?
         System.out.println("> Saving in KeyStore");
         char[] password = Utils.getInstance().getPasswordConsole();
         try {
@@ -161,30 +80,24 @@ public class Server {
             serverKeyStore.load(fis, password);
             // fis.close(); // ???
 
-            // InputStream pkey = new FileInputStream("private.pem");
-            // byte[] encoded = pkey.readAllBytes();
-            // System.out.println(new String(encoded));
+            // Read and parse and decode private key
+            InputStream streamKey = new FileInputStream("private.pem");
+            String key = new String(streamKey.readAllBytes());
+            // parse
+            Matcher privateKeyMatcher = PRIVATE_KEY_PATTERN.matcher(key);
+            String parsedPrivateKey = null;
+            if (privateKeyMatcher.find()) {
+                parsedPrivateKey = privateKeyMatcher.group(1).replace(NEW_LINE, EMPTY).trim();
+            }
+            streamKey.close();
+            if (parsedPrivateKey == null)
+                throw new Exception("Invalid private key");
+            // decode
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA"); // DSA, EC, DiffieHellman
+            byte[] decoded = Base64.getDecoder().decode(parsedPrivateKey); // decode private key in Base64
+            PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(decoded));
 
-            // KeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-            // KeySpec keySpec = new X509EncodedKeySpec(encoded);
-            // final KeyFactory keyFactory = KeyFactory.getInstance(matchedAlgorithm);
-            // final PublicKey publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(publicBytes));
-            // final PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateBytes));
-            System.out.println("Daje");
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(null);
-
-            // RSAPrivateKey kp =
-            // PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-            
-            // KeyFactory.getInstance("DiffieHellman").generatePrivate(keySpec);
-            // KeyFactory.getInstance("RSA").generatePrivate(keySpec);
-            // KeyFactory.getInstance("DSA").generatePrivate(keySpec);
-            // KeyFactory.getInstance("EC").generatePrivate(keySpec);
-
-            // PrivateKey privateKey = KeyFactory.getInstance("RSA").generatePrivate(keySpec);
-            RSAPrivateKey privateKey = (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(keySpec);
-            System.out.println("Daje");
-
+            // Read cert
             InputStream certificateInputStream = new FileInputStream("server.crt");
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             java.security.cert.Certificate cert = cf.generateCertificate(certificateInputStream);
@@ -192,58 +105,51 @@ public class Server {
 
             serverKeyStore.setKeyEntry("privatepem", privateKey, password, chain);
 
-        } catch (NoSuchAlgorithmException | CertificateException | IOException | KeyStoreException
-                | InvalidKeySpecException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // private void createServerCertificate() {
-    //     // (https://stackoverflow.com/questions/12330975/generate-certificate-chain-in-java)
-    //     // (https://stackoverflow.com/questions/925377/generate-certificates-public-and-private-keys-with-java)
-    //     try {
-    //         // Create server public and private keys
-    //         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA"); // KeyPairType or SignatureType(?): RSA, DSA, ECDSA
-    //         KeyPair keyPair = kpg.genKeyPair();
-            
-    //         X509Certificate[] chain = new X509Certificate[1];
-    //         //chain[0] = generateX509Certificate();
-
-    //         serveKeyStore.setKeyEntry("server", keyPair.getPrivate(), null, chain);
-
-    //         X509Certificate cert = null;
-    //         try { 
-    //             CertificateFactory cf = CertificateFactory.getInstance("X509");
-    //             //cert = (X509Certificate) cf.generateCertificate(inStream);
-    //         } // TODO
-    //         catch (Exception ex) { }
-
-    //         // Get an alias for the new keystore entry
-    //         String sAlias = cert.getSubjectX500Principal().getName() + cert.getIssuerX500Principal().getName();
-
-    //     } catch (Exception e) { e.printStackTrace(); }
-    // }
+    private static final String[] protocols = new String[] {"TLSv1.3"};
+    private static final String[] cipher_suites = new String[] {"TLS_AES_256_GCM_SHA384", "TLS_AES_128_GCM_SHA256", "TLS_CHACHA20_POLY1305_SHA256"};
+    private static final String message = "Like most of life's problems, this one can be solved with bending!";
 
     public void start() throws IOException {
 
         /*
-         * 1. Load Certificate 1. Create Secure Socket -
-         * javax.net.ssl.SSLServerSocketFactory - This includes authentication keys,
-         * peer certificate validation, enabled cipher suites, and the like. -
-         * javax.net.ssl.SSLSocketFactory
-         */
-        SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+            1. Load Certificate 
+            2. Load KeyStore
+            3. Load password for KeyStore
+            4. [Not so optional] load TrustStore
+            5. Create Secure Socket 
+                - Server
+                    - javax.net.ssl.SSLServerSocketFactory (this includes authentication keys, peer certificate validation, enabled cipher suites, and the like)
+                    - javax.net.ssl.SSLServerSocket
+                - Client
+                    - javax.net.ssl.SSLSocketFactory
+                    - javax.net.ssl.SSLSocket
+                - Other in-socket
+                    - SSLSession
+        */
 
+        // SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+        // System.out.println("getDefaultCipherSuites");
         // for(String s : ssf.getDefaultCipherSuites()) System.out.println(s);
+        // System.out.println("getSupportedCipherSuites");
+        // for(String s : ssf.getSupportedCipherSuites()) System.out.println(s);
+        // javax.net.ssl.SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port);
 
-        ServerSocket ss = ssf.createServerSocket(port);
+        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket("localhost", port);
+        socket.setEnabledProtocols(protocols);
+        socket.setEnabledCipherSuites(cipher_suites);
 
+        boolean isServerOn = true;
         while (isServerOn) {
             try {
 
                 // Server in ascolto
                 System.out.println("In ascolto");
-                Socket s = ss.accept();
+                SSLSocket s = (SSLSocket) ss.accept();
                 System.out.println("Connessione accettata");
 
                 // TODO Handshake

@@ -4,14 +4,17 @@
   - [TODO](#todo)
 - [OpenSSL](#openssl)
   - [PKCS#1 and PKCS#8 format](#pkcs1-and-pkcs8-format)
+  - [PKCS#8 private-key information shall have ASN.1 type](#pkcs8-private-key-information-shall-have-asn1-type)
   - [PKCS#12 or PFX format](#pkcs12-or-pfx-format)
 - [Trust Store vs Key Store](#trust-store-vs-key-store)
   - [Caption](#caption-1)
   - [KeyStore](#keystore)
   - [KeyStore's password vs protection parameters](#keystores-password-vs-protection-parameters)
     - [Should the protection param contains the KeyStore password? Idk, maybe yes.](#should-the-protection-param-contains-the-keystore-password-idk-maybe-yes)
-  - [How to read from file](#how-to-read-from-file)
-    - [PKCS8EncodedKeySpec read only binary](#pkcs8encodedkeyspec-read-only-binary)
+- [How to read from file](#how-to-read-from-file)
+  - [Read and Parse](#read-and-parse)
+    - [PKCS8EncodedKeySpec represents the ASN.1 encoding of a private key](#pkcs8encodedkeyspec-represents-the-asn1-encoding-of-a-private-key)
+- [SSLSocket](#sslsocket)
 - [Other Things](#other-things)
       - [Warnings](#warnings)
       - [Keystore](#keystore-1)
@@ -46,23 +49,22 @@ What I want to do:
   1. Generate Key-Pair
   2. Extract Public Key
   3. Generate CSR File
-
-- **Now to sign the CSR the server can**:
-  - Self-signed his own CSR
-    1. Use the private keys to self-sign the CSR
-  - Ask to a Certificate Authority to sign its certificate
-    1. send the CSR to a CA
-    2. The CA sign the certificate with it's private key
-       - Now anyone who has the public key of the CA can verify who really signed
+     - **To sign the CSR the server can**:
+       - Self-signed his own CSR (use its private key to self-sign the CSR)
+       - Ask to a Certificate Authority to sign its certificate
+         1. send the CSR to a CA
+         2. The CA sign the certificate with it's private key
+            - Now anyone who has the public key of the CA can verify who really signed
+  4. Set Up SSLSocket
 
 - Exchange (TLS1.2??)
    1. Client ask for www.youtube.com
    2. DNS request
    3. The server DNS resolve the name to an IP address
-   4. youtube server will answer with the certificate that contains the public key and that **are signed by Google _CA_**
-   5. client will check the certificate and his signing CA: if it know the CA's public key will run some verifications
-   6. now the client trust the server and creates a secret key that will be encrypted with the youtube public key and will send it to youtube
-   7. youtube receive the encrypted key, so it will decrypt it with its private key to gain the secret key
+   4. youtube server will send a chain of certs that contain the public keys and for example one is **signed by Google _CA_**
+   5. client will check the certificate and his signing CA: if the client know the CA's public key will decrypt the cert and read the information
+   6. now the client trust the server and creates a secret key that will be encrypted with the youtube's server public key and will send it to the server
+   7. youtube receive the encrypted key, so it'll decrypt it with its private key to gain the secret key
    8. the client and the server are the only ones to know about that secret key
 
 <p> <img src="./images/HTTPSExchange.png" width="1200"> </p>
@@ -77,6 +79,7 @@ What I want to do:
   - Only way to tell the difference between PEM .cer and DER .cer is to open the file in a Text editor and look for the BEGIN/END statements.
 - [Source 2](http://www.herongyang.com/Cryptography/keytool-Import-Key-What-Is-PKCS-8.html)
 - [Source 3 - Importing PEM certificate into Java KeyStore programmatically](https://stackoverflow.com/questions/51352762/importing-pem-certificate-into-java-keystore-programmatically)
+- [Util 0](https://www.sslshopper.com/)
 
 ```
 PEM Format
@@ -101,22 +104,23 @@ It can contain only Certificates & Chain certificates but not the Private key.
 > They are Base64 encoded ASCII files
 > They have extensions .p7b, .p7c
 > Several platforms supports it. eg:- Windows OS, Java Tomcat
-
+```
+```
 PKCS#8
 Available as rfc5208 on the other hand is a standard for handling private keys for all algorithms, not just RSA.
 Since most systems today need to support multiple algorithms, and wish to be able to adapt to new algorithms as they are developed, PKCS8 is preferred for private keys, and a similar any-algorithm scheme defined by X.509 for public keys. Although PKCS12/PFX is often preferred to both.
 When writing a private key in PKCS#8 format in a file, it needs to stored in either DER encoding or PEM encoding. 
 > contains a single private key
 > can be encrypted to protect the private key
-
+```
+**openssl private key format is specified in PKCS#1 as the RSAPrivateKey ASN.1 structure. It is not compatible with java's PKCS8EncodedKeySpec, which is based on the SubjectPublicKeyInfo ASN.1 structure.**
+```
 PFX/PKCS#12
 They are used for storing the Server certificate, any Intermediate certificates & Private key in one encryptable file.
 > They are Binary format files
 > They have extensions .pfx, .p12
 > Typically used on Windows OS to import and export certificates and Private keys
 ```
-
-- [Util 0](https://www.sslshopper.com/)
 
 ### [PKCS#1 and PKCS#8 format](https://stackoverflow.com/questions/48958304/pkcs1-and-pkcs8-format-for-rsa-private-key)
 
@@ -146,6 +150,8 @@ private void createServerCertificate() {
 }
 ```
 
+### PKCS#8 private-key information shall have ASN.1 type 
+
 ### PKCS#12 or PFX format
 
 **PKCS#12 = (bundle of) private key + server certificate and any intermediate certificates**
@@ -173,7 +179,7 @@ Breaking down the command:
 - KeyStore
   - come in various formats and are not even necessarily file
   - determines the authentication credentials to send to the remote host
-  - contains your private keys and certificates
+  - contains your private keys and certificates (**like a PKCS#12**)
 - TrustStore
   - determines the remote authentication credentials which should be trusted
   - contains CA certificates to trust
@@ -204,9 +210,33 @@ The information stored in a ProtectionParameter object protects the contents of 
 For example, protection parameters may be used to check the integrity of keystore data, 
 or to protect the confidentiality of sensitive keystore data (such as a PrivateKey).
 ```
-#### Should the protection param contains the KeyStore password? Idk, maybe yes.
+```java
+// Doc
+java.security.KeyStore.setKeyEntry(String alias, byte[] key, Certificate[] chain)
+java.security.KeyStore.setKeyEntry(String alias, Key key, char[] password, Certificate[] chain)
 
-### How to read from file
+java.security.KeyStore.setEntry(String alias, Entry entry, ProtectionParameter protParam)
+java.security.KeyStore.setCertificateEntry(String alias, Certificate cert)
+
+java.security.KeyStore.store(OutputStream stream, char[] password) // to save the KeyStore
+```
+#### Should the protection param contains the KeyStore password? Idk, maybe yes.
+```java
+// Example
+KeyStore.ProtectionParameter protectionParam = new KeyStore.PasswordProtection(keystorePassword);
+
+// Example secret key
+javax.crypto.SecretKey mySecretKey = getSecretKey();
+KeyStore.SecretKeyEntry skEntry = new KeyStore.SecretKeyEntry(mySecretKey);
+serverKeyStore.setKeyEntry("secretKeyAlias", skEntry, null);
+```
+```
+KeyStore.setKeyEntry usage:
+private key + certificate (like PKCS#12)
+secret key + null
+```
+
+## How to read from file
 
 ```java
 File file = new File("private.key");
@@ -218,47 +248,42 @@ InputStream privateKey = new FileInputStream("private.key");
 byte[] encoded = privateKey.readAllBytes();
 ```
 
-#### PKCS8EncodedKeySpec read only binary
-
+### Read and Parse
 
 ```java
-// Doc
-java.security.KeyStore.setKeyEntry(String alias, byte[] key, Certificate[] chain)
-java.security.KeyStore.setKeyEntry(String alias, Key key, char[] password, Certificate[] chain)
+public class KeyFormat {
 
-java.security.KeyStore.setEntry(String alias, Entry entry, ProtectionParameter protParam)
-java.security.KeyStore.setCertificateEntry(String alias, Certificate cert)
+    private static final Pattern PRIVATE_KEY_PATTERN = Pattern
+            .compile("-----BEGIN PRIVATE KEY-----(.*?)-----END PRIVATE KEY-----", Pattern.DOTALL);
+    private static final String NEW_LINE = "\n";
+    private static final String EMPTY = "";
 
-java.security.KeyStore.store(OutputStream stream, char[] password) // to save the KeyStore
-
-// Example
-KeyStore.ProtectionParameter protectionParam = new KeyStore.PasswordProtection(keystorePassword);
-
-// Example secret key
-javax.crypto.SecretKey mySecretKey = getSecretKey();
-KeyStore.SecretKeyEntry skEntry = new KeyStore.SecretKeyEntry(mySecretKey);
-serverKeyStore.setKeyEntry("secretKeyAlias", skEntry, null);
-
-// Example 2
-File file = new File("private.key");
-byte[] encoded = Files.readAllBytes(file.toPath());
-
-// Example 3
-KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-File file = new File("private.key");
-byte[] encoded = Files.readAllBytes(file.toPath());
-PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded); // NO
-RSAPrivateKey privKey = (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
+    public static void main(String[] args) {
+        try {
+            InputStream streamKey = new FileInputStream("private.pem");
+            String key = new String(streamKey.readAllBytes());
+            Matcher privateKeyMatcher = PRIVATE_KEY_PATTERN.matcher(key);
+            if (privateKeyMatcher.find()) {
+                String parsedPrivateKey = privateKeyMatcher.group(1).replace(NEW_LINE, EMPTY).trim();
+                //System.out.println(parsedPrivateKey);
+                KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                byte[] decoded = Base64.getDecoder().decode(parsedPrivateKey); // decode private key in Base64
+                PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(decoded));
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+}
 ```
-```
-KeyStore.setKeyEntry usage (not sure)
-private key + certificate
-secret key + null
-```
-```
-openssl private key format is specified in PKCS#1 as the RSAPrivateKey ASN.1 structure. 
-It is not compatible with java's PKCS8EncodedKeySpec, which is based on the SubjectPublicKeyInfo ASN.1 structure.
-```
+
+#### PKCS8EncodedKeySpec represents the ASN.1 encoding of a private key
+
+## SSLSocket
+
+[Master Source](https://gist.github.com/artem-smotrakov/bd14e4bde4d7238f7e5ab12c697a86a3)
+
+
+
+
 
 
 
