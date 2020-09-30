@@ -1,6 +1,9 @@
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.security.KeyFactory;
@@ -139,9 +142,13 @@ public class Server {
         // for(String s : ssf.getSupportedCipherSuites()) System.out.println(s);
         // javax.net.ssl.SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port);
 
-        SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket("localhost", port);
-        socket.setEnabledProtocols(protocols);
-        socket.setEnabledCipherSuites(cipher_suites);
+        SSLServerSocket sslServerSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(port);
+        sslServerSocket.setEnabledProtocols(protocols);
+        sslServerSocket.setEnabledCipherSuites(cipher_suites);
+
+        // SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket("localhost", port);
+        // socket.setEnabledProtocols(protocols);
+        // socket.setEnabledCipherSuites(cipher_suites);
 
         boolean isServerOn = true;
         while (isServerOn) {
@@ -149,37 +156,60 @@ public class Server {
 
                 // Server in ascolto
                 System.out.println("In ascolto");
-                SSLSocket s = (SSLSocket) ss.accept();
+                SSLSocket s = (SSLSocket) sslServerSocket.accept();
                 System.out.println("Connessione accettata");
 
-                // TODO Handshake
+                // E MO CHE DEVO FARE
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                InputStream is = new BufferedInputStream(s.getInputStream());
+                OutputStream os = new BufferedOutputStream(s.getOutputStream());
+                
+                byte[] data = new byte[2048];
+                int len = is.read(data);
+                if (len <= 0) throw new IOException("no data received");
+                System.out.printf("server received %d bytes: %s%n", len, new String(data, 0, len));
+                os.write(data, 0, len);
+                os.flush();
+
+                s.startHandshake();   // SSLHandshakeException: No available authentication scheme
+                log(s.getSession());
+
+                // TODO Handshake
                 // Sessione SSL
                 // GET CERTIFICATES
-                SSLSession session = ((SSLSocket) s).getSession();
-                // Certificate[] cchain2 = session.getLocalCertificates();
-                // for (int i = 0; i < cchain2.length; i++) {
-                //     System.out.println(((X509Certificate) cchain2[i]).getSubjectDN());
-                // }
-
-                // LOG
-                System.out.println("Peer host is " + session.getPeerHost());
-                System.out.println("Cipher is " + session.getCipherSuite());
-                System.out.println("Protocol is " + session.getProtocol());
-                System.out.println("ID is " + new BigInteger(session.getId()));
-                System.out.println("Session created in " + session.getCreationTime());
-                System.out.println("Session accessed in " + session.getLastAccessedTime());
 
                 // PRINT TO CLIENT
-                PrintStream out = new PrintStream(s.getOutputStream());
-                out.println("Hi");
-                out.close();
-                s.close();
+                // PrintStream out = new PrintStream(s.getOutputStream());
+                // out.println("Hi");
+                // out.close();
+                // s.close();
             
             } catch (Exception e) { e.printStackTrace(); }
         } // END SERVER LOOP
 
-        ss.close();
+        sslServerSocket.close();
+    }
+
+    private void log(SSLSession session) {
+        // LOG
+        System.out.println("Peer host: \t" + session.getPeerHost());
+        System.out.println("Cipher: \t" + session.getCipherSuite());
+        System.out.println("Protocol: \t" + session.getProtocol());
     }
 
     private SecretKey generateKey(String encryptionType) {
