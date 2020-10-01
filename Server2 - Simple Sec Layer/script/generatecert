@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "> Generating server's file"
 echo gen private
 openssl genrsa -out private.key 2048
 

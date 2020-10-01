@@ -67,6 +67,10 @@ public class Server {
                 if (fos != null)
                     fos.close();
             }
+
+            System.setProperty("javax.net.ssl.keyStore", "server.ks");
+            System.setProperty("javax.net.ssl.keyStorePassword", new String(password));
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -74,9 +78,9 @@ public class Server {
 
     private void initKeyStore() {
         // RSAPrivateKey or PrivateKey ?
-        System.out.println("> Saving in KeyStore");
-        char[] password = Utils.getInstance().getPasswordConsole();
+        System.out.println("> Init KeyStore");
         try {
+            char[] password = System.getProperty("javax.net.ssl.keyStorePassword").toCharArray();
             // KeyStore serverKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             KeyStore serverKeyStore = KeyStore.getInstance("PKCS12");
             java.io.FileInputStream fis = new java.io.FileInputStream("server.ks");
@@ -114,7 +118,7 @@ public class Server {
     }
 
     private static final String[] protocols = new String[] {"TLSv1.3"};
-    private static final String[] cipher_suites = new String[] {"TLS_AES_256_GCM_SHA384", "TLS_AES_128_GCM_SHA256", "TLS_CHACHA20_POLY1305_SHA256"};
+    private static final String[] cipher_suites = new String[] {"TLS_AES_128_GCM_SHA256"};
     private static final String message = "Like most of life's problems, this one can be solved with bending!";
 
     public void start() throws IOException {
@@ -135,6 +139,9 @@ public class Server {
                     - SSLSession
         */
 
+        System.out.println( "KeyStore path: " + System.getProperty("javax.net.ssl.keyStore"));
+        System.out.println( "KeyStore pasw: " + System.getProperty("javax.net.ssl.keyStorePassword"));
+
         // SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         // System.out.println("getDefaultCipherSuites");
         // for(String s : ssf.getDefaultCipherSuites()) System.out.println(s);
@@ -143,8 +150,16 @@ public class Server {
         // javax.net.ssl.SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port);
 
         SSLServerSocket sslServerSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(port);
+        sslServerSocket.setNeedClientAuth(false);
         sslServerSocket.setEnabledProtocols(protocols);
         sslServerSocket.setEnabledCipherSuites(cipher_suites);
+
+        // for( String s : sslServerSocket.getSSLParameters().getProtocols())
+        //     System.out.println(s); // TLSv1.3
+
+        // for( String s : sslServerSocket.getSupportedCipherSuites())
+        //     System.out.println(s); 
+        
 
         // SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket("localhost", port);
         // socket.setEnabledProtocols(protocols);
@@ -160,6 +175,12 @@ public class Server {
                 System.out.println("Connessione accettata");
 
                 // E MO CHE DEVO FARE
+                    // Il certificato potrebbe non andare bene
+                
+                
+                s.startHandshake();   // SSLHandshakeException: No available authentication scheme
+                log(s.getHandshakeSession());
+                
 
 
 
@@ -185,9 +206,6 @@ public class Server {
                 System.out.printf("server received %d bytes: %s%n", len, new String(data, 0, len));
                 os.write(data, 0, len);
                 os.flush();
-
-                s.startHandshake();   // SSLHandshakeException: No available authentication scheme
-                log(s.getSession());
 
                 // TODO Handshake
                 // Sessione SSL

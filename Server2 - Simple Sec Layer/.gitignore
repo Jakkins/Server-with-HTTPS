@@ -7,3 +7,5 @@ serverkeystore
 *.ks
 *.pfx
 *.p12
+/bin
+*.jar

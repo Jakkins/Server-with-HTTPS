@@ -1,0 +1,14 @@
+#!/bin/bash
+
+javac ./src/Main.java ./src/Server.java ./src/Utils.java -d ./bin
+
+# TO RUN
+# add the generatecert inside bin: bin->script->generatecert  
+# $ cd bin
+# $ java Main
+
+
+
+# future things
+# jar options jar-file [manifest-file] class-files...
+# jar -cfvem Server ./script/manifest ./bin/Main.class
