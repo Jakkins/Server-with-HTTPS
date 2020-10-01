@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -20,6 +21,9 @@ import java.util.regex.Pattern;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSession;
@@ -117,42 +121,48 @@ public class Server {
         }
     }
 
-    private static final String[] protocols = new String[] {"TLSv1.3"};
-    private static final String[] cipher_suites = new String[] {"TLS_AES_128_GCM_SHA256"};
+    private static final String[] protocols = new String[] { "TLSv1.2" };
+    private static final String[] cipher_suites = new String[] { "TLS_AES_128_GCM_SHA256",
+            "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384" };
     private static final String message = "Like most of life's problems, this one can be solved with bending!";
 
     public void start() throws IOException {
 
         /*
-            1. Load Certificate 
-            2. Load KeyStore
-            3. Load password for KeyStore
-            4. [Not so optional] load TrustStore
-            5. Create Secure Socket 
-                - Server
-                    - javax.net.ssl.SSLServerSocketFactory (this includes authentication keys, peer certificate validation, enabled cipher suites, and the like)
-                    - javax.net.ssl.SSLServerSocket
-                - Client
-                    - javax.net.ssl.SSLSocketFactory
-                    - javax.net.ssl.SSLSocket
-                - Other in-socket
-                    - SSLSession
-        */
+         * 1. Load Certificate 2. Load KeyStore 3. Load password for KeyStore 4. [Not so
+         * optional] load TrustStore 5. Create Secure Socket - Server -
+         * javax.net.ssl.SSLServerSocketFactory (this includes authentication keys, peer
+         * certificate validation, enabled cipher suites, and the like) -
+         * javax.net.ssl.SSLServerSocket - Client - javax.net.ssl.SSLSocketFactory -
+         * javax.net.ssl.SSLSocket - Other in-socket - SSLSession
+         */
 
-        System.out.println( "KeyStore path: " + System.getProperty("javax.net.ssl.keyStore"));
-        System.out.println( "KeyStore pasw: " + System.getProperty("javax.net.ssl.keyStorePassword"));
+        System.out.println("KeyStore path: " + System.getProperty("javax.net.ssl.keyStore"));
+        System.out.println("KeyStore pasw: " + System.getProperty("javax.net.ssl.keyStorePassword"));
 
-        // SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-        // System.out.println("getDefaultCipherSuites");
-        // for(String s : ssf.getDefaultCipherSuites()) System.out.println(s);
-        // System.out.println("getSupportedCipherSuites");
-        // for(String s : ssf.getSupportedCipherSuites()) System.out.println(s);
-        // javax.net.ssl.SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port);
+        // the fuck is this
+        SSLContext sc = null;
+        try {
+            char[] password = System.getProperty("javax.net.ssl.keyStorePassword").toCharArray();
+            KeyStore serverKeyStore = KeyStore.getInstance("PKCS12");
+            java.io.FileInputStream fis = new java.io.FileInputStream("server.ks");
+            serverKeyStore.load(fis, password);
 
-        SSLServerSocket sslServerSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault().createServerSocket(port);
-        sslServerSocket.setNeedClientAuth(false);
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance("PKIX");
+            System.out.println("DEFAULT ALG OF KEYMANAGER: " + KeyManagerFactory.getDefaultAlgorithm());
+            System.out.println("KEYMANAGER ACTUAL ALG: " + kmf.getAlgorithm());
+            kmf.init(serverKeyStore, password);
+
+            sc = SSLContext.getInstance("TLSv1.2");
+            sc.init(kmf.getKeyManagers(), null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        SSLServerSocket sslServerSocket = (SSLServerSocket) sc.getServerSocketFactory().createServerSocket(port);
+        //sslServerSocket.setNeedClientAuth(false);
         sslServerSocket.setEnabledProtocols(protocols);
-        sslServerSocket.setEnabledCipherSuites(cipher_suites);
+        sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
 
         // for( String s : sslServerSocket.getSSLParameters().getProtocols())
         //     System.out.println(s); // TLSv1.3

@@ -14,7 +14,9 @@
 - [How to read from file](#how-to-read-from-file)
   - [Read and Parse](#read-and-parse)
     - [PKCS8EncodedKeySpec represents the ASN.1 encoding of a private key](#pkcs8encodedkeyspec-represents-the-asn1-encoding-of-a-private-key)
-- [SSLSocket](#sslsocket)
+- [SSLServerSocket](#sslserversocket)
+  - [If there are problem with handshake build java to run debug on SSL (or use wireshark)](#if-there-are-problem-with-handshake-build-java-to-run-debug-on-ssl-or-use-wireshark)
+  - [Supported ciphersuites](#supported-ciphersuites)
 - [Other Things](#other-things)
       - [Warnings](#warnings)
       - [Keystore](#keystore-1)
@@ -123,6 +125,8 @@ They are used for storing the Server certificate, any Intermediate certificates 
 ```
 
 ### [PKCS#1 and PKCS#8 format](https://stackoverflow.com/questions/48958304/pkcs1-and-pkcs8-format-for-rsa-private-key)
+
+1. DSA certificates are no longer allowed in TLSv1.3
 
 ```bash
 #!/bin/bash
@@ -277,15 +281,44 @@ public class KeyFormat {
 
 #### PKCS8EncodedKeySpec represents the ASN.1 encoding of a private key
 
-## SSLSocket
+## SSLServerSocket
 
 [Master Source](https://gist.github.com/artem-smotrakov/bd14e4bde4d7238f7e5ab12c697a86a3)
+[openssl.blog - tls1.3](https://www.openssl.org/blog/blog/2017/05/04/tlsv1.3/)
+[Problem 1 - IMPORTANT](https://stackoverflow.com/questions/57601284/java-11-and-12-ssl-sockets-fail-on-a-handshake-failure-error-with-tlsv1-3-enable)
 
+### If there are problem with handshake build java to run debug on SSL (or use wireshark)
+```bash
+$ cd "Server2 - Simple Sec Layer"
+$ ./script/build
+# add the generatecert inside bin: bin->script->generatecert  
+$ mkdir ./bin/script
+$ cp -t ./bin/script/ ./script/generatecert
+# this is the important part
+$ cd bin/
+$ java -Djavax.net.debug=ssl:handshake Main
+```
 
+### Supported ciphersuites
 
+| JSSE TLSv1.3 ciphersuites | OpenSSL TLSv1.3 ciphersuites|
+| ------------------------- | --------------------------- |
+| TLS_AES_256_GCM_SHA384 | TLS13-AES-256-GCM-SHA384 |
+| TLS_CHACHA20_POLY1305_SHA256 | TLS13-CHACHA20-POLY1305-SHA256 |
+| TLS_AES_128_GCM_SHA256 | TLS13-AES-128-GCM-SHA256 |
+| Nope? | TLS13-AES-128-CCM-8-SHA256 |
+| Nope? | TLS13-AES-128-CCM-SHA256 |
 
+**Key exchange and authentication properties were part of the ciphersuite definition in TLSv1.2 and below.**
 
+```bash
+openssl ciphers -s -v
+TLS_AES_256_GCM_SHA384       TLSv1.3 Kx=any Au=any  Enc=AESGCM(256)            Mac=AEAD
+TLS_CHACHA20_POLY1305_SHA256 TLSv1.3 Kx=any Au=any  Enc=CHACHA20/POLY1305(256) Mac=AEAD
+TLS_AES_128_GCM_SHA256       TLSv1.3 Kx=any Au=any  Enc=AESGCM(128)            Mac=AEAD
+```
 
+TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
 
 
 

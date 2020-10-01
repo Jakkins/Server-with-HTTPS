@@ -6,8 +6,8 @@ import java.io.*;
 // From https://mkyong.com/java/java-sslsocket-tls-1-3-example/
 public class Client {
 
-    private static final String[] protocols = new String[]{"TLSv1.3"};
-    private static final String[] cipher_suites = new String[]{"TLS_AES_128_GCM_SHA256"};
+    private static final String[] protocols = new String[]{"TLSv1.2"};
+    private static final String[] cipher_suites = new String[]{"TLS_AES_128_GCM_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"};
 
     public static void main(String[] args) throws Exception {
 
@@ -17,10 +17,10 @@ public class Client {
 
         try {
             SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            socket = (SSLSocket) factory.createSocket("google.com", 443);
+            socket = (SSLSocket) factory.createSocket("localhost", 8080);
 
             socket.setEnabledProtocols(protocols);
-            socket.setEnabledCipherSuites(cipher_suites);
+            socket.setEnabledCipherSuites(socket.getSupportedCipherSuites());
 
             socket.startHandshake();
 
