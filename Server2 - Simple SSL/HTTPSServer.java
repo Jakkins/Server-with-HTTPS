@@ -5,8 +5,27 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.security.Key;
 import java.security.KeyStore;
- 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.interfaces.DSAPrivateKey;
+import java.security.interfaces.DSAPublicKey;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
+import java.security.interfaces.RSAMultiPrimePrivateCrtKey;
+import java.security.interfaces.RSAPrivateCrtKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.interfaces.XECPrivateKey;
+import java.security.interfaces.XECPublicKey;
+import java.util.Base64;
+import java.util.Base64.Decoder;
+
+import javax.crypto.SecretKey;
+import javax.crypto.interfaces.DHPrivateKey;
+import javax.crypto.interfaces.DHPublicKey;
+import javax.crypto.interfaces.PBEKey;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -51,8 +70,8 @@ public class HTTPSServer {
 
     private int port = 9999;
     private boolean isServerDone = false;
-     
-    public static void main(String[] args){
+
+    public static void main(String[] args) {
 
         // provo a creare gli store con keytool
         // createKeyStore();
@@ -60,15 +79,16 @@ public class HTTPSServer {
         HTTPSServer server = new HTTPSServer();
         server.run();
     }
-     
+
     /*
-        KEYSTORE
-    */
+     * KEYSTORE
+     */
     private static void createKeyStore() {
         try {
             System.out.println("> Generating KeyStore");
             KeyStore serverKeyStore = KeyStore.getInstance("JKS");
-            serverKeyStore.load(null, keyStorePassword); // To create an empty keystore pass null as the InputStream argument
+            serverKeyStore.load(null, keyStorePassword); // To create an empty keystore pass null as the InputStream
+                                                         // argument
 
             // store away the keystore
             java.io.FileOutputStream fos = null;
@@ -91,22 +111,60 @@ public class HTTPSServer {
     HTTPSServer() {
 
     }
-     
-    HTTPSServer(int port){
+
+    HTTPSServer(int port) {
         this.port = port;
     }
-     
+
     // Create the and initialize the SSLContext
-    private SSLContext createSSLContext(){
-        try{
+    private SSLContext createSSLContext() {
+        try {
             KeyStore keyStore = KeyStore.getInstance("JKS");
             keyStore.load(new FileInputStream("server.jks"), keyStorePassword);
 
-            log("Algorithm: " + keyStore.getKey("aliasbhoserver", "ciaone".toCharArray()).getAlgorithm() );
-            log("Format: " + keyStore.getKey("aliasbhoserver", "ciaone".toCharArray()).getFormat() );
-            keyStore.aliases().asIterator().forEachRemaining( s -> System.out.println(s));
+            log("Algorithm: " + keyStore.getKey("aliasbhoserver", "ciaone".toCharArray()).getAlgorithm());
+            log("Format: " + keyStore.getKey("aliasbhoserver", "ciaone".toCharArray()).getFormat());
+            keyStore.aliases().asIterator().forEachRemaining(s -> System.out.println(s));
             log("Is Certificate: " + keyStore.isCertificateEntry("aliasbhoserver"));
             log("Is Key Entry: " + keyStore.isKeyEntry("aliasbhoserver"));
+
+            log("");
+            log("");
+            // ...
+            // SunRsaSign RSA private CRT key, 2048 bits
+            Key key = keyStore.getKey("aliasbhoserver", "ciaone".toCharArray());
+
+            log("Key? \t" + key.getClass().isInstance(Key.class));
+            log("DHPrivateKey? \t" + key.getClass().isInstance(DHPrivateKey.class));
+            log("DHPublicKey? \t" + key.getClass().isInstance(DHPublicKey.class));
+            log("DSAPrivateKey? \t" + key.getClass().isInstance(DSAPrivateKey.class)); // 2 import
+            log("DSAPublicKey? \t" + key.getClass().isInstance(DSAPublicKey.class)); // 2 import
+
+            log("ECPrivateKey? \t" + key.getClass().isInstance(ECPrivateKey.class));
+            log("ECPublicKey? \t" + key.getClass().isInstance(ECPublicKey.class));
+            //log("EdECPrivateKey? \t" + key.getClass().isInstance(EdECPrivateKey.class));
+            //log("EdECPublicKey? \t" + key.getClass().isInstance(EdECPublicKey.class));
+            log("PBEKey? \t" + key.getClass().isInstance(PBEKey.class));
+            // https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/security/KeyStore.html
+            // I think I can use this to load private key on KeyStore
+            log("PrivateKey? \t" + key.getClass().isInstance(PrivateKey.class));
+
+            log("PublicKey? \t" + key.getClass().isInstance(PublicKey.class));
+            log("RSAMultiPrimePrivateCrtKey? \t" + key.getClass().isInstance(RSAMultiPrimePrivateCrtKey.class));
+            log("RSAPrivateCrtKey? \t" + key.getClass().isInstance(RSAPrivateCrtKey.class));
+            log("RSAPrivateKey? \t" + key.getClass().isInstance(RSAPrivateKey.class));
+            log("RSAPublicKey? \t" + key.getClass().isInstance(RSAPublicKey.class));
+
+            log("SecretKey? \t" + key.getClass().isInstance(SecretKey.class));
+            log("XECPrivateKey? \t" + key.getClass().isInstance(XECPrivateKey.class));
+            log("XECPublicKey? \t" + key.getClass().isInstance(XECPublicKey.class));
+
+            //log("SunRsaSign? \t" + key.getClass().isInstance(SunRsaSign.class));
+            System.out.println("I say to you, it's SunRsaSign.class, a proprietary class");
+            log( ( (PrivateKey) key));
+
+            log("");
+            log("");
             
             // Create key manager
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");

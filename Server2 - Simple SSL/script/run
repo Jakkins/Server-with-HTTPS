@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cd ~/\!root/\[Dev\]/Java/Server/ServerHTTPS/Server2\ -\ Simple\ SSL/bin
+# konsole -e java -Djavax.net.debug=all HTTPSServer
+# read -p "Press any button to continue "
+# konsole -e java -Djavax.net.debug=all HTTPSClient
+
+konsole --hold -e java HTTPSServer &
+read -p "Press any button to continue "
+konsole --hold -e java HTTPSClient

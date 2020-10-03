@@ -4,109 +4,42 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
-import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
-import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 
-public class Server {
+public class SSLServer {
 
-    private static final Pattern PRIVATE_KEY_PATTERN = Pattern
-            .compile("-----BEGIN PRIVATE KEY-----(.*?)-----END PRIVATE KEY-----", Pattern.DOTALL);
-    private static final String NEW_LINE = "\n";
-    private static final String EMPTY = "";
     private static final String UNICODE_FORMAT = "UTF-8";
+
+    private final SSLServerKeyStore keystore;
 
     private int port;
 
-    public Server(int port) {
+    public SSLServer(int port) {
         this.port = port;
-        createServerCertificate();
-        createServerKeyStore();
-        initKeyStore();
-    }
-
-    private void createServerCertificate() {
+        keystore = new SSLServerKeyStore("server.ks");
         Utils.getInstance().exec("./script/generatecert");
+        loadServerKeyInKeyStore();
     }
 
-    private void createServerKeyStore() {
-        try {
-            System.out.println("> Generating KeyStore");
-            char[] password = Utils.getInstance().getPasswordConsole();
-            // KeyStore serverKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            KeyStore serverKeyStore = KeyStore.getInstance("PKCS12");
-            System.out.println(serverKeyStore.getProvider().getInfo());
-            System.out.println(serverKeyStore.getProvider().getVersionStr());
-
-            serverKeyStore.load(null, password); // To create an empty keystore pass null as the InputStream argument
-
-            // store away the keystore
-            java.io.FileOutputStream fos = null;
-            try {
-                fos = new java.io.FileOutputStream("server.ks");
-                serverKeyStore.store(fos, password);
-            } finally {
-                if (fos != null)
-                    fos.close();
-            }
-
-            System.setProperty("javax.net.ssl.keyStore", "server.ks");
-            System.setProperty("javax.net.ssl.keyStorePassword", new String(password));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void initKeyStore() {
-        // RSAPrivateKey or PrivateKey ?
+    // PKCS12 = private key + x.509 cert and chain
+    private void loadServerKeyInKeyStore() {
         System.out.println("> Init KeyStore");
         try {
-            char[] password = System.getProperty("javax.net.ssl.keyStorePassword").toCharArray();
-            // KeyStore serverKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            KeyStore serverKeyStore = KeyStore.getInstance("PKCS12");
-            java.io.FileInputStream fis = new java.io.FileInputStream("server.ks");
-            serverKeyStore.load(fis, password);
-            // fis.close(); // ???
-
-            // Read and parse and decode private key
-            InputStream streamKey = new FileInputStream("private.pem");
-            String key = new String(streamKey.readAllBytes());
-            // parse
-            Matcher privateKeyMatcher = PRIVATE_KEY_PATTERN.matcher(key);
-            String parsedPrivateKey = null;
-            if (privateKeyMatcher.find()) {
-                parsedPrivateKey = privateKeyMatcher.group(1).replace(NEW_LINE, EMPTY).trim();
-            }
-            streamKey.close();
-            if (parsedPrivateKey == null)
-                throw new Exception("Invalid private key");
-            // decode
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA"); // DSA, EC, DiffieHellman
-            byte[] decoded = Base64.getDecoder().decode(parsedPrivateKey); // decode private key in Base64
-            PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(decoded));
+            PrivateKey privateKey = Utils.getInstance().privateRSAPemParser("private.pem");
 
             // Read cert
             InputStream certificateInputStream = new FileInputStream("server.crt");
@@ -114,7 +47,7 @@ public class Server {
             java.security.cert.Certificate cert = cf.generateCertificate(certificateInputStream);
             java.security.cert.Certificate[] chain = { cert };
 
-            serverKeyStore.setKeyEntry("privatepem", privateKey, password, chain);
+            keystore.setKeyEntry("privatepem", privateKey, chain);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -126,40 +59,19 @@ public class Server {
             "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384" };
     private static final String message = "Like most of life's problems, this one can be solved with bending!";
 
-    public void start() throws IOException {
-
-        /*
-         * 1. Load Certificate 2. Load KeyStore 3. Load password for KeyStore 4. [Not so
-         * optional] load TrustStore 5. Create Secure Socket - Server -
-         * javax.net.ssl.SSLServerSocketFactory (this includes authentication keys, peer
-         * certificate validation, enabled cipher suites, and the like) -
-         * javax.net.ssl.SSLServerSocket - Client - javax.net.ssl.SSLSocketFactory -
-         * javax.net.ssl.SSLSocket - Other in-socket - SSLSession
-         */
-
-        System.out.println("KeyStore path: " + System.getProperty("javax.net.ssl.keyStore"));
-        System.out.println("KeyStore pasw: " + System.getProperty("javax.net.ssl.keyStorePassword"));
-
-        // the fuck is this
+    public void start() {
         SSLContext sc = null;
         try {
-            char[] password = System.getProperty("javax.net.ssl.keyStorePassword").toCharArray();
-            KeyStore serverKeyStore = KeyStore.getInstance("PKCS12");
-            java.io.FileInputStream fis = new java.io.FileInputStream("server.ks");
-            serverKeyStore.load(fis, password);
-
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance("PKIX");
-            System.out.println("DEFAULT ALG OF KEYMANAGER: " + KeyManagerFactory.getDefaultAlgorithm());
-            System.out.println("KEYMANAGER ACTUAL ALG: " + kmf.getAlgorithm());
-            kmf.init(serverKeyStore, password);
-
             sc = SSLContext.getInstance("TLSv1.2");
-            sc.init(kmf.getKeyManagers(), null, null);
+            sc.init(keystore.getKeyManagers(), null, null); // null because I don't ask for client auth
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        SSLServerSocket sslServerSocket = (SSLServerSocket) sc.getServerSocketFactory().createServerSocket(port);
+        SSLServerSocket sslServerSocket = null;
+        try {
+            sslServerSocket = (SSLServerSocket) sc.getServerSocketFactory().createServerSocket(port);
+        } catch (IOException e1) { e1.printStackTrace(); }
         //sslServerSocket.setNeedClientAuth(false);
         sslServerSocket.setEnabledProtocols(protocols);
         sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
@@ -187,9 +99,9 @@ public class Server {
                 // E MO CHE DEVO FARE
                     // Il certificato potrebbe non andare bene
                 
-                
+                //log(s.getHandshakeSession());
                 s.startHandshake();   // SSLHandshakeException: No available authentication scheme
-                log(s.getHandshakeSession());
+                
                 
 
 
@@ -230,7 +142,9 @@ public class Server {
             } catch (Exception e) { e.printStackTrace(); }
         } // END SERVER LOOP
 
-        sslServerSocket.close();
+        try {
+            sslServerSocket.close();
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     private void log(SSLSession session) {

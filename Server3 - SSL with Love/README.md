@@ -3,11 +3,13 @@
   - [Caption](#caption)
   - [TODO](#todo)
 - [OpenSSL](#openssl)
+  - [Caption](#caption-1)
+  - [Source](#source)
   - [PKCS#1 and PKCS#8 format](#pkcs1-and-pkcs8-format)
   - [PKCS#8 private-key information shall have ASN.1 type](#pkcs8-private-key-information-shall-have-asn1-type)
   - [PKCS#12 or PFX format](#pkcs12-or-pfx-format)
 - [Trust Store vs Key Store](#trust-store-vs-key-store)
-  - [Caption](#caption-1)
+  - [Caption](#caption-2)
   - [KeyStore](#keystore)
   - [KeyStore's password vs protection parameters](#keystores-password-vs-protection-parameters)
     - [Should the protection param contains the KeyStore password? Idk, maybe yes.](#should-the-protection-param-contains-the-keystore-password-idk-maybe-yes)
@@ -69,9 +71,29 @@ What I want to do:
    7. youtube receive the encrypted key, so it'll decrypt it with its private key to gain the secret key
    8. the client and the server are the only ones to know about that secret key
 
+1. Load Certificate 
+2. Load KeyStore
+3. Load password for KeyStore 
+4. [Not so optional] load TrustStore
+5. Create Secure Socket 
+   1. Server 
+      - javax.net.ssl.SSLServerSocketFactory (this includes authentication keys, peer certificate validation, enabled cipher suites, and the like) 
+      - javax.net.ssl.SSLServerSocket 
+   2. Client 
+      - javax.net.ssl.SSLSocketFactory
+      - javax.net.ssl.SSLSocket 
+   3. Other in-socket 
+      - SSLSession
+         
+
 <p> <img src="./images/HTTPSExchange.png" width="1200"> </p>
 
 ## OpenSSL
+
+### Caption
+- Encode to Base64 = from something to Base64
+
+### Source
 
 - [Master Source](https://www.openssl.org/docs/)
 - [Source 0](https://adamtheautomator.com/install-openssl-powershell/)
@@ -83,6 +105,11 @@ What I want to do:
 - [Source 3 - Importing PEM certificate into Java KeyStore programmatically](https://stackoverflow.com/questions/51352762/importing-pem-certificate-into-java-keystore-programmatically)
 - [Util 0](https://www.sslshopper.com/)
 
+```
+- PKCS#1 PEM (-----BEGIN RSA PRIVATE KEY-----)
+- PKCS#8 PEM (-----BEGIN PRIVATE KEY-----)
+- PKCS#8 DER (binary)
+```
 ```
 PEM Format
 It is the most common format that Certificate Authorities issue certificates in. 
@@ -122,6 +149,53 @@ They are used for storing the Server certificate, any Intermediate certificates 
 > They are Binary format files
 > They have extensions .pfx, .p12
 > Typically used on Windows OS to import and export certificates and Private keys
+```
+PEM Base64 Encoded Example
+```
+https://www.base64decode.org/
+https://www.base64encode.org/
+
+-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAvz7rM/tILQENsQcLDFmhLDbo+TOfyEUdqyjG0vmlvxiTDF+J
+0lxwHWhbtK00I0lRzBRspBQ2CwHzKeeVgc1Bmgpj6WqbcNfrH19P7saCJWALThQP
+/OQtEneXx/cOYAP6sJRnKY1VAjwjxMP/SKLMIhSDXNkly92L1q1Z2otbs6XaBc0T
+waw1BIG8WKOCphvRm8eQaUoejwMyzyWPh2qy76jcyjuCstIU3xo1doUYxnYFp9wn
+sjgfDrIJjiYEyEDOx9pTX10xzPSt5MZjO2Mr7UEBdR6Rng6Ll7VfYvsbAfYhNGZw
+no8vEwwBDcVIK5Yj5KvRTZbnX7Kkv1YI3cAk+wIDAQABAoIBAGbCWgLuTBPScxbh
+3+/c4RsuzfPI51vmt1BWcq698W9CtxB47UcY4C0M++mS/2bOaKMtfkqTiY5Ul+G2
+S8EZFty8JH8xByCVBAMxZXO5Ogj3GFv1r7mEqSs5E1cgypqQyMzEkMHk7P5sbhO1
+9J+Eygat2v+ytfpaql7JenRRWQ6naaoDGfeQ5bYLhHQFjlyUFeFxmqkZQ64BZlMM
+8Lp+YPdKS17YaES4Fe03A6ih7R82rLo2Sory5RDDtiPaXwDMm7QIzJlZuojJK/Mw
+gaZ3dnOdd0ilI8aAIetolJ9sfaw/tDEMWza9xeZ1GkSX+f0iuGcT1VilubIYgiOK
+taSZOzECgYEA+DPI82vJvQOOUSUcoaVukBkLq1RxFQ0+jdcnM8n1I8keEs6aqy8y
+qTIYOSt4SFx7jPg3EJeb+F3iteWKvm2Nq6r5B0Ut+W4u50RaXNuLt5Nz02ypHuTy
+443epHbPjAsLrnIrijOOmcnBSqY6GirjsaY5FfwUqlYOtg01Rul2C9cCgYEAxUEM
+zoBZRxXdUJjW2CWiJO3Z+gcqoMwo6FegWLDcHIWuO16Z+JVuZxYbsylDS8oSlCFs
+yYLgxz19djy0NEIo3HlzVEIJCjP4S7/PT2okZEqJEcgaZczH56NnNe2Z+rK2+YHF
+kCGvotmiaRln281HlUHGqok+/W2KfHx/3hfy630CgYBieKEkOkJqlAuVlAS8+RZZ
+YyZnDfRjZsLHoXGzMU/pp7QfwApLGkmeKPrFS8LH6rE155BpK808h3sXsX8POAW5
+8vYj9UVdLWK8bDjxmEThS0XrvrOGR006DKIlW+HR7NvwlOlDRlswFoRyamqo0RVO
++OSzHTTRs5zYi3r0rFEiNwKBgQC4GF8Id3dbRce5Cfwx3OW4i5hNptSdIA3p0qZf
+QCkeIZGb7U3MWEKiyVpu2sro+B5gy9VJOPHqYbQvXrZcs4aJRnxhngPr1tccc1bb
+aleulnXY96XTbsz/nlycUzXLaXIl6XzmaNoQJghTCJgK50qwvaPZ05/LTKncRyHb
+uQRJzQKBgBqcxd/z07y16QAeHO3SVCSj/P63XqptRnRqh8kbBnp483De4HbY6Wox
+nSXeKZl5zl7OUACx6t/GaKwgWekM6PLE5+jBvXoc1l1GbiEnbZ5NMo4V+02tKh66
+KPJG35adrJdOoFeXlNarAOsFjDjt4RJgWqREkMgWZQ80955VV+/T
+-----END RSA PRIVATE KEY-----
+```
+Decoded to UTF-8 (on a program we'll use an array of byte)
+```
+0��>3H-
+Y,63E(_\ph[4#IQl6)畁A
+cjp_OƂ%`N-w`g)U<#H"\%݋֭Yڋ[5XћǐiJ2%j;5vv'8	&@S_]1c;c+Au_b!4fp/
+H+#M_V$��fZLs.[PVroBxG-fh-~JTKܼ$1 1es:[+9W ʚĐlnZ^ztQYit\qCfS~`JK^hD766Jö#_�̛̙Y+0wvswH#ƀ!hl}?1[6uD"gX#;1�3kɽQ%nTq
+>'3#Κ/229+xH\{7]劾mE-n.DZ\ۋslޤvόr+3J:*㱦9V
+5Fv�A΀YGP%$*(WX;^ng)CK!lɂ=}v<4B(ysTB	
+3KOj$dJeg5Ő!٢igGAƪ>m||}bx$:BjYc&g
+cfǡq1O駴
+KI(K5i+<{8#E]-bl8DKE뾳GM:%[CF[0rjjN4ѳ؋zQ"7�_ww[Eǹ	1帋Mԝ 
+Ҧ_@)!MXBZn`I8a/^\F|asVjWun\S5ir%|h&S
+JӟLG!۹IӼ�T$^mFtjzxpvj1%)y^P�h Yz]Fn!'mM2M*(FߖNW֫�8`ZDe4UW
 ```
 
 ### [PKCS#1 and PKCS#8 format](https://stackoverflow.com/questions/48958304/pkcs1-and-pkcs8-format-for-rsa-private-key)
