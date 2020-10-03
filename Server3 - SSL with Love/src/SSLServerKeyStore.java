@@ -1,8 +1,5 @@
 import java.security.Key;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 
 import javax.net.ssl.KeyManager;
@@ -48,9 +45,8 @@ public class SSLServerKeyStore {
         try {
             java.io.FileInputStream fis = new java.io.FileInputStream(path);
             serverKeyStore.load(fis, password);
-            serverKeyStore.setKeyEntry(alias, key, password, chain);
-            if (fis != null)
-                fis.close();
+            serverKeyStore.setKeyEntry(alias, key, password, chain); // PKCS12 = private key + chain (x.509 server cert + chain)
+            if (fis != null) fis.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
