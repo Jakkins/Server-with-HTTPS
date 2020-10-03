@@ -23,13 +23,12 @@ public class Server {
         while(isServerOn) {
             try {
                 // Note that the accept() method blocks the current thread until a connection is made.
+                System.out.println("> Listening");
                 Socket s = ss.accept();
                 new ServerThread(s).start();
-                System.out.println("Connessione accettata, mi rimetto in ascolto");
-                
+                System.out.println("> Connection Accepted");
             } catch (IOException e) { e.printStackTrace(); }
         }
-        
         try { ss.close();
         } catch (IOException e) { e.printStackTrace(); }
 	}

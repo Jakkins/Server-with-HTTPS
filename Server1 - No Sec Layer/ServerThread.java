@@ -5,9 +5,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-// lo start viene chiamato sulla classe Server
-// lo start chiama il metodo run, ma prima chiama il costruttore
-
 public class ServerThread extends Thread {
 
     private Socket s;
@@ -18,27 +15,20 @@ public class ServerThread extends Thread {
 
     @Override
     public void run() {
-        
         try {
-            // Start handling application content
-
             // INPUT
-            InputStream inputStream = s.getInputStream();
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            BufferedReader in = new BufferedReader(
+                                new InputStreamReader(
+                                s.getInputStream()));
             
             String line = null;
-            while((line = bufferedReader.readLine()) != null){
+            while((line = in.readLine()) != null){
                 System.out.println("Client : "+line);
-                
-                // WHY THIS?
-                if(line.trim().isEmpty()){
-                    break;
-                }
+                // if(line.trim().isEmpty()) break; -> should be used ?
             }
 
             // OUTPUT
-            OutputStream outputStream = s.getOutputStream();
-            PrintWriter out = new PrintWriter(outputStream);
+            PrintWriter out = new PrintWriter(s.getOutputStream());
             
             out.println("HTTP/1.1 200 OK");
             out.println("Content-Type: text/html");
@@ -46,11 +36,10 @@ public class ServerThread extends Thread {
             out.println("<p> Hello world </p>");
             out.flush();
             
-            out.close(); // senza il close il client continua ad aspettare l'invio di tutti i dati
-
-            // s.close();
+            in.close();
+            out.close(); // without close the client continue to wait for all the datas 
+            s.close();
         } catch (Exception e) { e.printStackTrace();}
-        
     }
 
 }

@@ -3,10 +3,9 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 
 // Java 11
-// From https://mkyong.com/java/java-sslsocket-tls-1-3-example/
 public class Client {
 
-    private static final String[] protocols = new String[]{"TLSv1.2"};
+    private static final String[] protocols = new String[]{"TLSv1.3"};
     private static final String[] cipher_suites = new String[]{"TLS_AES_128_GCM_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"};
 
     public static void main(String[] args) throws Exception {
@@ -34,7 +33,7 @@ public class Client {
             out.flush();
 
             if (out.checkError())
-                System.out.println("SSLSocketClient:  java.io.PrintWriter error");
+                System.out.println("SSLSocketClient: java.io.PrintWriter error");
 
             /* read response */
             in = new BufferedReader(

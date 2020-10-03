@@ -1,22 +1,51 @@
+<h1 align="center">ServerHTTPS</h1>
+
+I'm not perfect so there could be some (a lot) errors.
+
+### Contents
+- [Source](#source)
+- [General Explainations](#general-explainations)
+- [Differences from TLS1.2 and TLS1.3](#differences-from-tls12-and-tls13)
+- [Client1 - Print Response](#client1---print-response)
+  - [Who/How/Why](#whohowwhy)
+- [Server1 - No Sec Layer](#server1---no-sec-layer)
+  - [Who/How/Why](#whohowwhy-1)
+  - [What use](#what-use)
+    - [OpenSSL TLS 1.3 supported ciphersuites (<a href="https://wiki.openssl.org/index.php/TLS1.3"> Source </a>)](#openssl-tls-13-supported-ciphersuites--source-)
+    - [<a href="https://en.wikipedia.org/wiki/Curve25519"> X25519 </a>](#-x25519-)
+    - [How To Automate](#how-to-automate)
+    - [Print The Self-Signed Certificate in a Text Format](#print-the-self-signed-certificate-in-a-text-format)
+    - [Generate Web Server Keys](#generate-web-server-keys)
+    - [Use CA's private key to sign web server's CSR to get the signed certificate](#use-cas-private-key-to-sign-web-servers-csr-to-get-the-signed-certificate)
+    - [Print The Signed Certificate Of The Web Server In A Text Format](#print-the-signed-certificate-of-the-web-server-in-a-text-format)
+    - [Subject Alternative Name (SAN) Extension](#subject-alternative-name-san-extension)
+    - [To Test Without Encrypt The Private Key (PK NOT ENCRYPTED)](#to-test-without-encrypt-the-private-key-pk-not-encrypted)
+    - [Verify If A Certificate Is Valid](#verify-if-a-certificate-is-valid)
+  - [Create Server](#create-server)
+    - [Handshake](#handshake)
+      - [DH 1.3 handshake](#dh-13-handshake)
+    - [What is the difference between .pem, .csr, .key and .crt? (26 Oct 2018)](#what-is-the-difference-between-pem-csr-key-and-crt-26-oct-2018)
+  - [Sources](#sources)
+        - [Cipher suite:](#cipher-suite)
+- [- {!*}What Are AEAD Ciphers?](#ulliwhat-are-aead-ciphersliul)
+    - [Legenda:](#legenda)
 
 ## Source
+
+- [wiki - HTTPS](https://en.wikipedia.org/wiki/HTTPS)
+- [Differences from TLS1.2 and TLS1.3](https://www.youtube.com/watch?v=grRi-aFrbSE)
+- [TLS 1.3 - RFC 8446](https://tools.ietf.org/html/rfc8446)
 
 - [docs.oracle.com - 15 - api](https://docs.oracle.com/en/java/javase/15/docs/api/index.html)
 - [docs.oracle.com - 15 - specs - security](https://docs.oracle.com/en/java/javase/15/docs/specs/security/standard-names.html)
 
-<h1 align="center">ServerHTTPS</h1>
 
-0. <a href="https://github.com/Jakkins/ServerHTTPS#what-ill-use"> What I'll use </a>
-1. <a href="https://github.com/Jakkins/ServerHTTPS#generate-keys"> Handshake </a>
+## General Explainations
 
-2. 
+HTTPS is an extension of the Hypertext Transfer Protocol.
+The communication protocol is encrypted using Transport Layer Security (TLS) or, **formerly**, Secure Sockets Layer (SSL) is therefore also referred to as HTTP over TLS or HTTP over SSL. 
 
-3. Use express to make an app with NodeJS
-    - Handshake for HTTP over TLS 1.3 (Diffie-Hellman)
-4. Try the HTTPS connection
-5. <a href="https://github.com/Jakkins/ServerHTTPS#legenda"> Legenda </a>
-
-<h2 align="center">Differences from TLS1.2 and TLS1.3</h2>
+## Differences from TLS1.2 and TLS1.3
 
 - Removed static RSA
 - Removed custom (EC)DHE groups
@@ -25,18 +54,36 @@
 - Removed non-AEAD ciphers
 - Removed simplified resumption
 
-[Source](https://www.youtube.com/watch?v=grRi-aFrbSE)
-
-<h2 align="center">What I'll use</h2>
-
-- OpenSSl 1.1.1 (implements support for five TLSv1.3 [cipher suites](#cipher-suite))
-- TLS 1.3 ([RFC 8446](https://www.rfc-editor.org/info/rfc8446))
 ```
 Implied for TLS 1.3:
 	- Key Exchange / key agreement algorithm: DHE or ECHDE (e.g. not RSA)
 	- Authentication mechanism: RSA or DSA or ECDSA
 	- Ciphers: AEAD ciphers (e.g. not CBC)
 ```
+
+## Client1 - Print Response
+### Who/How/Why
+
+It's a code from [here](https://docs.oracle.com/javase/10/security/sample-code-illustrating-secure-socket-connection-client-and-server.htm#JSSEC-GUID-AA1C27A1-2CA8-4309-B281-D6199F60E666).
+
+It has to be launched with (or use other method like System.setProperties).
+```bash
+java -Djavax.net.ssl.trustStore=path_to_samplecacerts_file Client
+```
+It is used to do a GET request with Java to a Server with SSL.
+
+## Server1 - No Sec Layer
+### Who/How/Why
+
+Warm up.
+
+Simple HTTP.
+
+### What use
+
+- OpenSSl 1.1.1 (implements support for five TLSv1.3 [cipher suites](#cipher-suite))
+- 
+
 | Example of cipher suite | TLS_AES_128_GCM_SHA256 |
 | :------- | :------ |
 | Protocol | TLS 1.3 |
