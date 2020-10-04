@@ -194,6 +194,10 @@ openssl x509 -in server.csr -out server.crt -req -signkey private.key
 ```
 OR
 ```java
+/*
+  This is the command to use...
+  Runtime.getRuntime().exec(command);
+*/
 // or ProcessBuilder pb = new ProcessBuilder("ls", "-a", "-l");
 private void createServerCertificate() {
   // Generate Private Key
