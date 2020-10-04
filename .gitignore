@@ -1,10 +1,19 @@
-
-
 /node_modules
 /.vscode
 *.ENV
 
+/.vscode
+*.csr
+*.crt
+*.key
+*.pem
+serverkeystore
+*.ks
+*.pfx
+*.p12
+*.jar
 
+bin
 
 
 

@@ -3,42 +3,21 @@
 I'm not perfect so there could be some (a lot) errors.
 
 ### Contents
-- [Source](#source)
 - [General Explainations](#general-explainations)
 - [Differences from TLS1.2 and TLS1.3](#differences-from-tls12-and-tls13)
+- [JDK](#jdk)
 - [Client1 - Print Response](#client1---print-response)
   - [Who/How/Why](#whohowwhy)
 - [Server1 - No Sec Layer](#server1---no-sec-layer)
   - [Who/How/Why](#whohowwhy-1)
-  - [What use](#what-use)
-    - [OpenSSL TLS 1.3 supported ciphersuites (<a href="https://wiki.openssl.org/index.php/TLS1.3"> Source </a>)](#openssl-tls-13-supported-ciphersuites--source-)
-    - [<a href="https://en.wikipedia.org/wiki/Curve25519"> X25519 </a>](#-x25519-)
-    - [How To Automate](#how-to-automate)
-    - [Print The Self-Signed Certificate in a Text Format](#print-the-self-signed-certificate-in-a-text-format)
-    - [Generate Web Server Keys](#generate-web-server-keys)
-    - [Use CA's private key to sign web server's CSR to get the signed certificate](#use-cas-private-key-to-sign-web-servers-csr-to-get-the-signed-certificate)
-    - [Print The Signed Certificate Of The Web Server In A Text Format](#print-the-signed-certificate-of-the-web-server-in-a-text-format)
-    - [Subject Alternative Name (SAN) Extension](#subject-alternative-name-san-extension)
-    - [To Test Without Encrypt The Private Key (PK NOT ENCRYPTED)](#to-test-without-encrypt-the-private-key-pk-not-encrypted)
-    - [Verify If A Certificate Is Valid](#verify-if-a-certificate-is-valid)
-  - [Create Server](#create-server)
-    - [Handshake](#handshake)
-      - [DH 1.3 handshake](#dh-13-handshake)
-    - [What is the difference between .pem, .csr, .key and .crt? (26 Oct 2018)](#what-is-the-difference-between-pem-csr-key-and-crt-26-oct-2018)
-  - [Sources](#sources)
-        - [Cipher suite:](#cipher-suite)
-- [- {!*}What Are AEAD Ciphers?](#ulliwhat-are-aead-ciphersliul)
-    - [Legenda:](#legenda)
-
-## Source
-
-- [wiki - HTTPS](https://en.wikipedia.org/wiki/HTTPS)
-- [Differences from TLS1.2 and TLS1.3](https://www.youtube.com/watch?v=grRi-aFrbSE)
-- [TLS 1.3 - RFC 8446](https://tools.ietf.org/html/rfc8446)
-
-- [docs.oracle.com - 15 - api](https://docs.oracle.com/en/java/javase/15/docs/api/index.html)
-- [docs.oracle.com - 15 - specs - security](https://docs.oracle.com/en/java/javase/15/docs/specs/security/standard-names.html)
-
+- [Server2 - Simple SSL](#server2---simple-ssl)
+  - [Who/How/Why](#whohowwhy-2)
+- [Server3 - SSL with Love](#server3---ssl-with-love)
+  - [Who/How/Why](#whohowwhy-3)
+- [Ingredients](#ingredients)
+- [Handshake](#handshake)
+- [Curiosity](#curiosity)
+- [Sources](#sources)
 
 ## General Explainations
 
@@ -61,12 +40,23 @@ Implied for TLS 1.3:
 	- Ciphers: AEAD ciphers (e.g. not CBC)
 ```
 
+## JDK
+
+Java provides several security-based APIs that help out developers to establish secure connections with the client to receive and send messages in an encrypted format:
+- Java Secured-Socket Extension ([JSSE](https://en.wikipedia.org/wiki/Java_Secure_Socket_Extension))
+- Java Key Store (JKS)
+- Java Cryptography Architecture (JCA)
+- Java Cryptographic Extension (JCE)
+- Java Authentication and Authorization Service (JAAS)
+- Public Key Infrastructure (PKI)
+- Network Security Services for Java ([JSS](https://www-archive.mozilla.org/projects/security/pki/jss/))
+
 ## Client1 - Print Response
 ### Who/How/Why
 
 It's a code from [here](https://docs.oracle.com/javase/10/security/sample-code-illustrating-secure-socket-connection-client-and-server.htm#JSSEC-GUID-AA1C27A1-2CA8-4309-B281-D6199F60E666).
 
-It has to be launched with (or use other method like System.setProperties).
+It has to be launched with (or use other method like System.setProperties):
 ```bash
 java -Djavax.net.ssl.trustStore=path_to_samplecacerts_file Client
 ```
@@ -79,20 +69,38 @@ Warm up.
 
 Simple HTTP.
 
-### What use
+## Server2 - Simple SSL
+### Who/How/Why
+
+Code from [here](https://www.pixelstech.net/article/1445603357-A-HTTPS-client-and-HTTPS-server-demo-in-Java).
+
+With some keytool's commands to create keystore, truststore and import cert on client's truststore.
+
+## Server3 - SSL with Love
+### Who/How/Why
+
+This is what my mind have created.
+
+What I achieved:
+- no use of sun.security libs
+- no keytool (use sun's libs) (I'll use openssl)
+- cert created and self signed on the fly
+- no Bouncy Castle
+- no Portecle
+
+## Ingredients
 
 - OpenSSl 1.1.1 (implements support for five TLSv1.3 [cipher suites](#cipher-suite))
-- 
 
 | Example of cipher suite | TLS_AES_128_GCM_SHA256 |
 | :------- | :------ |
 | Protocol | TLS 1.3 |
-| Key Exchange | ECHDE, DHE, chosen from client's supported ciphersuites list |
-| Certificate authentication (CA) | RSA, DSA, ECDSA, chosen from client's supported ciphersuites list |
+| Key Exchange | ECHDE or DHE (chosen from client's supported ciphersuites list) |
+| Certificate authentication (CA) | RSA, DSA, ECDSA (chosen from client's supported ciphersuites list) |
 | Cipher | AES_128_GCM |
 | Mac | SHA256 |
 
-<h2 align="center">Handshake</h2>
+## Handshake
 
 Basic full TLS handshake: ([Source](https://www.rfc-editor.org/rfc/rfc8446.html#section-2))
 ```
@@ -122,205 +130,48 @@ Auth | {CertificateVerify*}
     {} Indicates messages protected using keys derived from a [sender]_handshake_traffic_secret.
     [] Indicates messages protected using keys derived from [sender]_application_traffic_secret_N.
 
----
-
-
-
-
-
----
-
-
-#### OpenSSL TLS 1.3 supported ciphersuites (<a href="https://wiki.openssl.org/index.php/TLS1.3"> Source </a>)
-> If two peers supporting different TLSv1.3 draft versions attempt to communicate then they will fall back to TLSv1.2
-
-
-OpenSSL only supports ECDHE groups for this
-
-The list of supported groups is configurable
-
 In practice most clients will use X25519 or P-256 for their initial key_share. For maximum performance it is recommended that servers are configured to support at least those two groups and clients use one of those two for its initial key_share. This is the default case (OpenSSL clients will use X25519).
 
-#### <a href="https://en.wikipedia.org/wiki/Curve25519"> X25519 </a>
-https://wiki.openssl.org/index.php/Command_Line_Elliptic_Curve_Operations
-
-If you need to generate x25519 or ed25519 keys then see the genpkey subcommand.
-
-https://wiki.openssl.org/index.php/Command_Line_Utilities#Key_Generation
-
-https://wiki.openssl.org/index.php/Command_Line_Utilities#Commands
-
-
-<h2 align="center">Generate CA's Keys</h2>
-```shell
-openssl req -x509 -newkey rsa:4096 -days 365 -keyout ca-key.pem -out ca-cert.pem
-```
-            req: command that primarily creates and processes certificate requests in PKCS#10 format.
-        -newkey: create a new certificate request and a new private key
-     ca-key.pem: contains the private key (encrypted)
-    ca-cert.pem: contains the public key encoded in base64 (not encrypted)
-
-#### How To Automate
-```shell
-openssl req -x509 -newkey rsa:4096 -days 365 -keyout ca-key.pem -out ca-cert.pem -subj "/C=IT/ST=..."
-```
-> -subj args
-
-> e.g. -subj "/type0=value0/type1=value1/type2=..."; characters may be escaped by ‘\’ (backslash); no spaces are skipped
-
-#### Print The Self-Signed Certificate in a Text Format
-```shell
-openssl x509 -in ca-cert.pem -noout -text
-```
-- Country Code [C]
-- State of Province Name [ST]
-- Locality Name [L]
-- Organization Name [O]
-- Organizational Unit Name [OU]
-- Common Name / Domain Name [CN] = Common Name / Email
-- Email Address ⇑
-
-#### Generate Web Server Keys
-```shell
-openssl req -newkey rsa:4096 -keyout server-key.pem -out server-req.pem
-OR
-openssl req -newkey rsa:4096 -keyout server-key.pem -out server-req.pem -subj "Change this information with web server information"
-```
-
-#### Use CA's private key to sign web server's CSR to get the signed certificate
-```shell
-openssl x509 -req -in server-req.pem -days 60 -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem
-```
-               x509: is a multi-purpose certificate utility, It can be used to sign certificate requests like a "mini CA"
-               -req: expect a certificate request on input instead of a certificate
-           -CA file: the CA certificate to be used for signing. When this option is present, x509 behaves like a mini CA. The input file is signed by the CA using this option
-        -CAkey file: set the CA private key to sign a certificate with. Otherwise it is assumed that the CA private key is present in the CA certificate file
-    -CAcreateserial: create the CA serial number file if it does not exist instead of generating an error. The file will contain the serial number ‘02’ and the certificate being signed will have ‘1’ as its serial number
-
-#### Print The Signed Certificate Of The Web Server In A Text Format
-```shell
-openssl x509 -in server-cert.pem -noout -text
-```
-
-#### Subject Alternative Name (SAN) Extension
-```shell
-touch server-ext.cnf
-```
-for example write in server-ext.cnf:
-```
-subjectAltName=DNS:*.example.com,DNS:*.example.org,IP:0.0.0.0
-```
-re-sign the server request and then read the information inside the new server-cert.pem
-```shell
-openssl x509 -req -in server-req.pem -days 60 -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem -extfile server.ext.cnf
-then
-openssl x509 -in server-cert.pem -noout -text
-```
-There'll be a new extension section
-
-#### To Test Without Encrypt The Private Key (PK NOT ENCRYPTED)
-```shell
-openssl req -x509 -newkey rsa:4096 -days 365 -nodes -keyout ca-key.pem -out ca-cert.pem
-openssl req -newkey rsa:4096 -nodes -keyout server-key.pem -out server-req.pem
-```
-#### Verify If A Certificate Is Valid
-```shell
-openssl verify -CAfile ca-cert.pem server-cert.pem
-```
-
-### Create Server
-#### Handshake
-- what client support
-- server send certificate (Public Key)
+## Curiosity
 - Blowfish
-- With TLS 1.2 clint encrypt the simmetric key and send it to the server ???
-- Diffie Hellman (TLS 1.3)
-    The client generates two keys (numbers) one public one private and merge them through complicated math so that they cannot be unmerged.
-    - n is very big (2048, 4096)
 - CCS attack (TLS 1.2)
-- AES
-- RSA Handshake
-- DH 1.2 Handshake
-##### DH 1.3 handshake
 
-The problem here is not so much with CBC, but with alternatives that are easier to implement safely, without losing mathematical security.In fact, AES-CBC turned out to be notoriously difficult to implement correctly. I recall that older implementations of transport layer security don't have cryptographically secure initialization vectors, which are a must-have for CBC mode
+E.g. of TLS 1.2 cipher suites
+> When authentication or key exchange are not indicated <b>tipically</b> you can imply that is RSA
 
-TLS 1.3 library today: BoringSSL, OpenSSL, WolfSSL implement TLS 1.3. (2018-08)
-LibreSSL supports AEAD ciphers, including aes-256-gcm (2019-12)
+| HexadecimalRappresentation | Protocol_KeyExchange_Auth_Cipher_Mac |
+| -------------------------- | ------------------------------------ |
+| 0xc02b | TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 |
+| 0xc02f | TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 |
+| 0x009e | TLS_DHE_RSA_WITH_AES_128_GCM_SHA256 |
+| 0xcc14 | TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 |
+| 0xcc13 | TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 |
+| 0xc00a | TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA |
+| 0xc014 | TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA |
+| 0x0039 | TLS_DHE_RSA_WITH_AES_256_CBC_SHA |
+| 0xc009 | TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA |
+| 0xc013 | TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA |
+| 0x0033 | TLS_DHE_RSA_WITH_AES_128_CBC_SHA |
+| 0x009c | TLS_RSA_WITH_AES_128_GCM_SHA256 |
+| 0x0035 | TLS_RSA_WITH_AES_256_CBC_SHA |
+| 0x002f | TLS_RSA_WITH_AES_128_CBC_SHA |
+| 0x000a | TLS_RSA_WITH_3DES_EDE_CBC_SHA |
 
----
-
-openssl genrsa -aes128 -passout pass:foobar 3072
-
-A better alternative is to write the passphrase into a temporary file that is protected with file permissions, and specify that:
-openssl genrsa -aes128 -passout file:passphrase.txt 3072
-
-Or supply the passphrase on standard input:
-openssl genrsa -aes128 -passout stdin 3072
-
-You can also used a named pipe with the file: option, or a file descriptor.
-
-THEN
-
-To then obtain the matching public key, you need to use openssl rsa, supplying the same passphrase with the -passin parameter as was used to encrypt the private key:
-
-openssl rsa -passin file:passphrase.txt -pubout
-
-(This expects the encrypted private key on standard input - you can instead read it from a file using -in <file>)
-
----
-
-Example of creating a 3072-bit private and public key pair in files, with the private key pair encrypted with password foobar:
-
-openssl genrsa -aes128 -passout pass:foobar -out privkey.pem 3072
-openssl rsa -in privkey.pem -passin pass:foobar -pubout -out privkey.pub
-
-
-
----
-#### What is the difference between .pem, .csr, .key and .crt? (26 Oct 2018)
-> .pem stands for Privacy Enhanced Mail; it simply indicates a base64 encoding with header and footer lines.
-> <a href="https://github.com/Jakkins/ServerHTTPS#sources"> Source </a>{1}
-
-Ex.
-```
------BEGIN [label]-----
-blablabla
------END [label]-----
-```
-The "[label]" section describes the message, so it might be: 
-- PRIVATE KEY
-- CERTIFICATE REQUEST
-- CERTIFICATE
-
-Ex.
-```
------BEGIN PRIVATE KEY-----
-blablabla
------END PRIVATE KEY-----
-```
-
-One PEM file can contain multiple certificates
-
----
-
-
-
----
-
-### Sources 
+## Sources 
 > [ sources tagged with {*} are recommended ]
-
 > [ sources tagged with {!} are for visual learner ]
-
 > [ sources tagged with {M} are for Math theory ]
-###### Cipher suite:
+
 - https://en.wikipedia.org/wiki/Cipher_suite
 - {!*}[What is a TLS Cipher Suite?](https://www.youtube.com/watch?v=ZM3tXhPV8v0)
 - {!*}[Strong vs. Weak TLS Ciphers](https://www.youtube.com/watch?v=k_C2HcJbgMc)
 - {!*}[What Are AEAD Ciphers?](https://www.youtube.com/watch?v=od44W45sCQ4)
----
 - {1} [Difference between pem, csr, key and crt](https://crypto.stackexchange.com/questions/43697/what-is-the-difference-between-pem-csr-key-and-crt)
+- [wiki - HTTPS](https://en.wikipedia.org/wiki/HTTPS)
+- [Differences from TLS1.2 and TLS1.3](https://www.youtube.com/watch?v=grRi-aFrbSE)
+- [TLS 1.3 - RFC 8446](https://tools.ietf.org/html/rfc8446)
+- [docs.oracle.com - 15 - api](https://docs.oracle.com/en/java/javase/15/docs/api/index.html)
+- [docs.oracle.com - 15 - specs - security](https://docs.oracle.com/en/java/javase/15/docs/specs/security/standard-names.html)
 - [Easy start https server - YouTube (2016)](https://www.youtube.com/watch?v=8ptiZlO7ROs)
 - [Create & sign SSL/TLS certificates with openssl - YouTube (2020)](https://www.youtube.com/watch?v=7YgaZIFn7mY)
 - [A complete overview of SSL/TLS and its cryptographic system - YouTube (2020)](https://www.youtube.com/watch?v=-f4Gbk-U758)
@@ -333,45 +184,4 @@ One PEM file can contain multiple certificates
 - {!}[Transport Layer Security 1.3 Explained - TLS Handshake, Key Exchange, TLS Extensions and MITM](https://www.youtube.com/watch?v=ntytZy3i-Jo)
 - {!*}[Secret Key Exchange (Diffie-Hellman) - Computerphile](https://www.youtube.com/watch?v=NmM9HA2MQGI)
 - {M}[Diffie Hellman -the Mathematics bit- Computerphile](https://www.youtube.com/watch?v=Yjrfm_oRO0w)
-
----
-
-#### Legenda:
-- Cipher Suite
-	- Protocol: {*}TLS 1.3, TLS 1.2, TLS 1.1, TLS 1.0, SSLv3, SSLv2
-    - Key Exchange: DH / DHE / {*}ECDHE / ADH, RSA
-    - Auth (certificate): {*}RSA, ECDSA
-    - Cipher (symmetric encryption algorithms): AES, {*}AES_GCM (AEAD cipher), AES_CBC, Camellia, DES, RC4, RC2
-    - Mac (message authentication code)(Hashing algorithms): SHA, SHA1, {*}SHA256, SHA384, MD5, MD2
-
-	E.g. of TLS 1.2 cipher suites
-
-    | HexadecimalRappresentation | Protocol_KeyExchange_Auth_Cipher_Mac |
-    | -------------------------- | ------------------------------------ |
-    | 0xc02b | TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 |
-    | 0xc02f | TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 |
-    | 0x009e | TLS_DHE_RSA_WITH_AES_128_GCM_SHA256 |
-    | 0xcc14 | TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 |
-    | 0xcc13 | TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 |
-    | 0xc00a | TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA |
-    | 0xc014 | TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA |
-    | 0x0039 | TLS_DHE_RSA_WITH_AES_256_CBC_SHA |
-    | 0xc009 | TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA |
-    | 0xc013 | TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA |
-    | 0x0033 | TLS_DHE_RSA_WITH_AES_128_CBC_SHA |
-    | 0x009c | TLS_RSA_WITH_AES_128_GCM_SHA256 |
-    | 0x0035 | TLS_RSA_WITH_AES_256_CBC_SHA |
-    | 0x002f | TLS_RSA_WITH_AES_128_CBC_SHA |
-    | 0x000a | TLS_RSA_WITH_3DES_EDE_CBC_SHA |
-
-> When authentication or key exchange are not indicated <b>tipically</b> you can imply that is RSA
-
-- In Public Key Infrastructure (PKI) systems
-	a Certificate Signing Request (also CSR or certification request) is a message sent from an applicant to a Certificate Authority (CA) in order to apply for a digital identity certificate. The most common format for CSRs is the PKCS#10 specification. Another is the Signed Public Key and Challenge SPKAC format generated by some web browsers.
-- PKCS stands for "Public Key Cryptography Standards"
-- Certification Authority (CA)
-	The format of these certificates is specified by the X.509 or EMV standard.
-		The client uses the CA certificate to authenticate the CA signature on the server certificate, as part of the authorizations before launching a secure connection.
-	Any site using self-signed certificates acts as its own CA.
-- X.509
-    standard for defining the format of public key certificates
+- [X25519](https://en.wikipedia.org/wiki/Curve25519)

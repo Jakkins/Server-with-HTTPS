@@ -9,7 +9,6 @@ javac ./src/Main.java -cp ./src -d ./bin
 
 # All this to RUN THIS
 # java -Djavax.net.debug=ssl:handshake Main
-
 # java -Djavax.net.debug=ssl:handshake:verbose:keymanager:trustmanager -Djava.security.debug=access:stack Main
 
 # future things

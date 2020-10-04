@@ -36,34 +36,6 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-/*
-    1. Nel KeyStore e nel TrustStore non ci sono ne certificati ne chiavi
-    2. Il keyManagerFactory non da errore nonostante gli passi una password sbagliata
-    3. SSLHandshakeException: no cipher suites in common
-*/
-
-/*
-    1. Posso provare a creare server.jks e test.jks con keytool e vedere cosa succede
-
-    Ho inserito una chiave privata su server.jks e una su test.jks
-    e pubblica ??
-
-    Dal Client:
-        javax.net.ssl.SSLHandshakeException: Certificate signature validation failed
-
-    Dal Server:
-        javax.net.ssl.SSLHandshakeException: Received fatal alert: certificate_unknown
-*/
-
-/*
-    I had to make the public key of the server trusted by the keystore in the client.
-    Then onwards it started working.
-
-    Quindi in pratica devo inserire il certificato del server dentro al TrustStore del client
-
-    NOW WORKS
-*/
-
 public class HTTPSServer {
 
     private static final char[] keyStorePassword = "ciaone".toCharArray();
@@ -72,45 +44,11 @@ public class HTTPSServer {
     private boolean isServerDone = false;
 
     public static void main(String[] args) {
-
-        // provo a creare gli store con keytool
-        // createKeyStore();
-
         HTTPSServer server = new HTTPSServer();
         server.run();
     }
 
-    /*
-     * KEYSTORE
-     */
-    private static void createKeyStore() {
-        try {
-            System.out.println("> Generating KeyStore");
-            KeyStore serverKeyStore = KeyStore.getInstance("JKS");
-            serverKeyStore.load(null, keyStorePassword); // To create an empty keystore pass null as the InputStream
-                                                         // argument
-
-            // store away the keystore
-            java.io.FileOutputStream fos = null;
-            try {
-                fos = new java.io.FileOutputStream("server.jks");
-                serverKeyStore.store(fos, keyStorePassword);
-            } finally {
-                if (fos != null)
-                    fos.close();
-            }
-
-            System.setProperty("javax.net.ssl.keyStore", "server.jks");
-            System.setProperty("javax.net.ssl.keyStorePassword", new String(keyStorePassword));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    HTTPSServer() {
-
-    }
+    HTTPSServer() {}
 
     HTTPSServer(int port) {
         this.port = port;
@@ -128,43 +66,47 @@ public class HTTPSServer {
             log("Is Certificate: " + keyStore.isCertificateEntry("aliasbhoserver"));
             log("Is Key Entry: " + keyStore.isKeyEntry("aliasbhoserver"));
 
-            log("");
-            log("");
-            // ...
-            // SunRsaSign RSA private CRT key, 2048 bits
-            Key key = keyStore.getKey("aliasbhoserver", "ciaone".toCharArray());
+            // log("");
+            // log("");
+            // // ...
 
-            log("Key? \t" + key.getClass().isInstance(Key.class));
-            log("DHPrivateKey? \t" + key.getClass().isInstance(DHPrivateKey.class));
-            log("DHPublicKey? \t" + key.getClass().isInstance(DHPublicKey.class));
-            log("DSAPrivateKey? \t" + key.getClass().isInstance(DSAPrivateKey.class)); // 2 import
-            log("DSAPublicKey? \t" + key.getClass().isInstance(DSAPublicKey.class)); // 2 import
+            /*
+                It's SunRsaSign.class, a proprietary class
+                log("SunRsaSign? \t" + key.getClass().isInstance(SunRsaSign.class));
+            */
+            
+            // // SunRsaSign RSA private CRT key, 2048 bits
+            // Key key = keyStore.getKey("aliasbhoserver", "ciaone".toCharArray());
 
-            log("ECPrivateKey? \t" + key.getClass().isInstance(ECPrivateKey.class));
-            log("ECPublicKey? \t" + key.getClass().isInstance(ECPublicKey.class));
-            //log("EdECPrivateKey? \t" + key.getClass().isInstance(EdECPrivateKey.class));
-            //log("EdECPublicKey? \t" + key.getClass().isInstance(EdECPublicKey.class));
-            log("PBEKey? \t" + key.getClass().isInstance(PBEKey.class));
-            // https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/security/KeyStore.html
-            // I think I can use this to load private key on KeyStore
-            log("PrivateKey? \t" + key.getClass().isInstance(PrivateKey.class));
+            // log("Key? \t" + key.getClass().isInstance(Key.class));
+            // log("DHPrivateKey? \t" + key.getClass().isInstance(DHPrivateKey.class));
+            // log("DHPublicKey? \t" + key.getClass().isInstance(DHPublicKey.class));
+            // log("DSAPrivateKey? \t" + key.getClass().isInstance(DSAPrivateKey.class)); // 2 import
+            // log("DSAPublicKey? \t" + key.getClass().isInstance(DSAPublicKey.class)); // 2 import
 
-            log("PublicKey? \t" + key.getClass().isInstance(PublicKey.class));
-            log("RSAMultiPrimePrivateCrtKey? \t" + key.getClass().isInstance(RSAMultiPrimePrivateCrtKey.class));
-            log("RSAPrivateCrtKey? \t" + key.getClass().isInstance(RSAPrivateCrtKey.class));
-            log("RSAPrivateKey? \t" + key.getClass().isInstance(RSAPrivateKey.class));
-            log("RSAPublicKey? \t" + key.getClass().isInstance(RSAPublicKey.class));
+            // log("ECPrivateKey? \t" + key.getClass().isInstance(ECPrivateKey.class));
+            // log("ECPublicKey? \t" + key.getClass().isInstance(ECPublicKey.class));
+            // //log("EdECPrivateKey? \t" + key.getClass().isInstance(EdECPrivateKey.class));
+            // //log("EdECPublicKey? \t" + key.getClass().isInstance(EdECPublicKey.class));
+            // log("PBEKey? \t" + key.getClass().isInstance(PBEKey.class));
+            // // https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/security/KeyStore.html
+            // // I think I can use this to load private key on KeyStore
+            // log("PrivateKey? \t" + key.getClass().isInstance(PrivateKey.class));
 
-            log("SecretKey? \t" + key.getClass().isInstance(SecretKey.class));
-            log("XECPrivateKey? \t" + key.getClass().isInstance(XECPrivateKey.class));
-            log("XECPublicKey? \t" + key.getClass().isInstance(XECPublicKey.class));
+            // log("PublicKey? \t" + key.getClass().isInstance(PublicKey.class));
+            // log("RSAMultiPrimePrivateCrtKey? \t" + key.getClass().isInstance(RSAMultiPrimePrivateCrtKey.class));
+            // log("RSAPrivateCrtKey? \t" + key.getClass().isInstance(RSAPrivateCrtKey.class));
+            // log("RSAPrivateKey? \t" + key.getClass().isInstance(RSAPrivateKey.class));
+            // log("RSAPublicKey? \t" + key.getClass().isInstance(RSAPublicKey.class));
 
-            //log("SunRsaSign? \t" + key.getClass().isInstance(SunRsaSign.class));
-            System.out.println("I say to you, it's SunRsaSign.class, a proprietary class");
-            log( ( (PrivateKey) key));
+            // log("SecretKey? \t" + key.getClass().isInstance(SecretKey.class));
+            // log("XECPrivateKey? \t" + key.getClass().isInstance(XECPrivateKey.class));
+            // log("XECPublicKey? \t" + key.getClass().isInstance(XECPublicKey.class));
 
-            log("");
-            log("");
+            // log( ( (PrivateKey) key));
+
+            // log("");
+            // log("");
             
             // Create key manager
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");

@@ -12,9 +12,7 @@ public class KeyParser {
 
     private static KeyParser kp;
 
-    private KeyParser() {
-
-    }
+    private KeyParser() { }
 
     public static KeyParser getInstance() {
         if(kp == null) kp = new KeyParser();
@@ -26,10 +24,7 @@ public class KeyParser {
 
     /*
         https://github.com/Mastercard/client-encryption-java/blob/master/src/main/java/com/mastercard/developer/utils/EncryptionUtils.java
-
-        OpenSSL offer a way to transform PKCS#1 in PKCS#8 so maybe I could change a lot of this code,
-        and what about the new line ?
-
+        OpenSSL offers a way to transform PKCS#1 in PKCS#8 so maybe I could change a lot of this code.
         What about SunRsaSign ?
     */
     private static final String NEW_LINE = "\n";

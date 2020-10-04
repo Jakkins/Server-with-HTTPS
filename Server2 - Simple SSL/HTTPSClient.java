@@ -23,43 +23,11 @@ public class HTTPSClient {
     private int port = 9999;
      
     public static void main(String[] args){
-
-        // provo a creare gli store con keytool
-        // createKeyStore();
-        
         HTTPSClient client = new HTTPSClient();
         client.run();
     }
-
-    /*
-        KEYSTORE
-    */
-    private static void createKeyStore() {
-        try {
-            System.out.println("> Generating KeyStore");
-            KeyStore serverKeyStore = KeyStore.getInstance("JKS");
-            serverKeyStore.load(null, keyStorePassword); // To create an empty keystore pass null as the InputStream argument
-
-            // store away the keystore
-            java.io.FileOutputStream fos = null;
-            try {
-                fos = new java.io.FileOutputStream("test.jks");
-                serverKeyStore.store(fos, keyStorePassword);
-            } finally {
-                if (fos != null)
-                    fos.close();
-            }
-
-            System.setProperty("javax.net.ssl.keyStore", "test.jks");
-            System.setProperty("javax.net.ssl.keyStorePassword", new String(keyStorePassword));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
      
-    HTTPSClient(){      
-    }
+    HTTPSClient(){}
      
     HTTPSClient(String host, int port){
         this.host = host;
