@@ -79,7 +79,7 @@ With some keytool's commands to create keystore, truststore and import cert on c
 ## Server3 - SSL with Love
 ### Who/How/Why
 
-This is what my mind have created.
+This is what my mind has created.
 
 What I achieved:
 - no use of sun.security libs
